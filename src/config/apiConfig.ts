@@ -14,7 +14,7 @@ interface AppConfig {
 
 const config: AppConfig = {
   API_BASE_URL: 'http://localhost:8000',
-  APP_NAME: 'TimeIQ',
+  APP_NAME: 'TimeGuard',
 };
 
 export default config;
