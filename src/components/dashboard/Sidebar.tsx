@@ -5,27 +5,33 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   isAdmin: boolean;
+  role: string;
 }
 
 interface NavItem {
   label: string;
   icon: string;
   path: string;
-  adminOnly?: boolean;
+  /** Roles that can see this item. If omitted → visible to everyone. */
+  roles?: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', icon: '▪', path: '/dashboard' },
-  { label: 'Users', icon: '👥', path: '/dashboard/users', adminOnly: true },
-  { label: 'Roles', icon: '⚙', path: '/dashboard/roles', adminOnly: true },
-  { label: 'Profile', icon: '👤', path: '/dashboard/profile' },
+  { label: 'Dashboard', icon: '', path: '/dashboard' },
+  { label: 'Users', icon: '', path: '/dashboard/users', roles: ['admin'] },
+  { label: 'Roles', icon: '', path: '/dashboard/roles', roles: ['admin'] },
+  { label: 'Clients', icon: '', path: '/dashboard/clients', roles: ['admin', 'operation_executive'] },
+  { label: 'Whitelist', icon: '', path: '/dashboard/whitelist', roles: ['admin', 'operation_executive'] },
+  { label: 'Profile', icon: '', path: '/dashboard/profile' },
 ];
 
-const Sidebar = ({ isAdmin }: SidebarProps) => {
+const Sidebar = ({ role }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const items = isAdmin ? NAV_ITEMS : NAV_ITEMS.filter((n) => !n.adminOnly);
+  const items = NAV_ITEMS.filter(
+    (n) => !n.roles || n.roles.includes(role),
+  );
 
   return (
     <nav className="sidebar">

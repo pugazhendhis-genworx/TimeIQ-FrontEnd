@@ -3,13 +3,16 @@
  * ────────────────────────────────────────────── */
 import { useAppSelector } from '../../hooks/reduxHooks';
 import AdminOverview from './AdminOverview';
+import OperationExecutiveOverview from './OperationExecutiveOverview';
 import UserDashboard from './UserDashboard';
 
 const DashboardPage = () => {
   const { user } = useAppSelector((s) => s.auth);
-  const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const role = user?.role?.toLowerCase();
 
-  return isAdmin ? <AdminOverview /> : <UserDashboard />;
+  if (role === 'admin') return <AdminOverview />;
+  if (role === 'operation_executive') return <OperationExecutiveOverview />;
+  return <UserDashboard />;
 };
 
 export default DashboardPage;

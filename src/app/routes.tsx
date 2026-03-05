@@ -12,6 +12,8 @@ import {
   RolesPage,
   ProfilePage,
 } from '../features/dashboard';
+import { ClientManagement } from '../features/client';
+import { WhitelistManagement } from '../features/whitelist';
 
 const router = createBrowserRouter([
   /* ── Public auth routes ────────────────────── */
@@ -33,6 +35,8 @@ const router = createBrowserRouter([
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/dashboard/users', element: <UserManagement /> },
           { path: '/dashboard/roles', element: <RolesPage /> },
+          { path: '/dashboard/clients', element: <ClientManagement /> },
+          { path: '/dashboard/whitelist', element: <WhitelistManagement /> },
           { path: '/dashboard/profile', element: <ProfilePage /> },
         ],
       },

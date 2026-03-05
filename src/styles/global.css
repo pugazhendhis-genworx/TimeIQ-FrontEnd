@@ -800,6 +800,20 @@ img {
   font-size: 0.8rem;
 }
 
+/* ── Client code cell ── */
+.client-code-cell {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.5px;
+  color: var(--color-primary);
+}
+
 /* ── Detail rows (view user modal) ── */
 .detail-row {
   display: flex;

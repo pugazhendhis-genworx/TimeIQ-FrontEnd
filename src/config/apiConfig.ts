@@ -4,16 +4,21 @@
 
 interface AppConfig {
   /**
-   * In development Vite proxies `/api` → `http://127.0.0.1:8000` so that
-   * httpOnly cookies are set on the same origin and sent back automatically.
-   * In production this should point to the real backend URL.
+   * AUTH_API_BASE_URL  → auth, users, roles (port 8000)
+   * SERVICES_API_BASE_URL → all other micro-services (port 8001)
+   *
+   * In development Vite proxies can be used so httpOnly cookies
+   * stay on the same origin. In production point these to the
+   * real backend URLs.
    */
-  API_BASE_URL: string;
+  AUTH_API_BASE_URL: string;
+  SERVICES_API_BASE_URL: string;
   APP_NAME: string;
 }
 
 const config: AppConfig = {
-  API_BASE_URL: 'http://localhost:8000',
+  AUTH_API_BASE_URL: 'http://localhost:8000',
+  SERVICES_API_BASE_URL: 'http://localhost:8001',
   APP_NAME: 'TimeGuard',
 };
 
