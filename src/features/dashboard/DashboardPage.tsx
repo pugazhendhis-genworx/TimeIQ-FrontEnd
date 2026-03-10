@@ -5,6 +5,7 @@ import { useAppSelector } from '../../hooks/reduxHooks';
 import AdminOverview from './AdminOverview';
 import OperationExecutiveOverview from './OperationExecutiveOverview';
 import UserDashboard from './UserDashboard';
+import { AuditorDashboard } from '../audit';
 
 const DashboardPage = () => {
   const { user } = useAppSelector((s) => s.auth);
@@ -12,6 +13,7 @@ const DashboardPage = () => {
 
   if (role === 'admin') return <AdminOverview />;
   if (role === 'operation_executive') return <OperationExecutiveOverview />;
+  if (role === 'auditor') return <AuditorDashboard />;
   return <UserDashboard />;
 };
 

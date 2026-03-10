@@ -13,6 +13,12 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
         secure: false,
       },
+      // attachments are served by the services backend; proxy them as well
+      '/attachments': {
+        target: 'http://127.0.0.1:8001',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

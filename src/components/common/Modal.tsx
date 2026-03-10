@@ -9,9 +9,17 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   actions?: ReactNode;
+  /** 'md' (default 480px) | 'lg' (720px) | 'xl' (960px) */
+  size?: 'md' | 'lg' | 'xl';
 }
 
-const Modal = ({ open, onClose, title, children, actions }: ModalProps) => {
+const sizeClass: Record<string, string> = {
+  md: '',
+  lg: 'modal--lg',
+  xl: 'modal--xl',
+};
+
+const Modal = ({ open, onClose, title, children, actions, size = 'md' }: ModalProps) => {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -34,7 +42,7 @@ const Modal = ({ open, onClose, title, children, actions }: ModalProps) => {
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal ${sizeClass[size]}`} onClick={(e) => e.stopPropagation()}>
         <h3 className="modal__title">{title}</h3>
         {children}
         {actions && <div className="modal__actions">{actions}</div>}
