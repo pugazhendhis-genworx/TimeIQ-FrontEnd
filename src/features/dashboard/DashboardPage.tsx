@@ -1,48 +1,20 @@
 /* ──────────────────────────────────────────────
- *  DashboardPage – placeholder landing after login
+ *  DashboardPage – renders role-specific overview
  * ────────────────────────────────────────────── */
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { logoutThunk } from '../auth/authSlice';
-import Button from '../../components/common/Button';
-import Logo from '../../components/ui/Logo';
+import { useAppSelector } from '../../hooks/reduxHooks';
+import AdminOverview from './AdminOverview';
+import OperationExecutiveOverview from './OperationExecutiveOverview';
+import UserDashboard from './UserDashboard';
+import { AuditorDashboard } from '../audit';
 
 const DashboardPage = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAppSelector((s) => s.auth);
+  const { user } = useAppSelector((s) => s.auth);
+  const role = user?.role?.toLowerCase();
 
-  /* Redirect to login after logout */
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleLogout = async () => {
-    await dispatch(logoutThunk());
-    navigate('/login', { replace: true });
-  };
-
-  return (
-    <div className="dashboard">
-      <header className="dashboard__header">
-        <Logo size="sm" />
-        <Button variant="danger" onClick={handleLogout}>
-          ⏻ Logout
-        </Button>
-      </header>
-
-      <main className="dashboard__main">
-        <h1>Welcome{user?.user_name ? `, ${user.user_name}` : ''}! 🎉</h1>
-        <p>You have successfully logged in to TimeIQ — your Timesheet Processing Assistant.</p>
-        <p className="dashboard__hint">
-          Start processing timesheets, reviewing extractions, and managing approvals.
-        </p>
-      </main>
-    </div>
-  );
+  if (role === 'admin') return <AdminOverview />;
+  if (role === 'operation_executive') return <OperationExecutiveOverview />;
+  if (role === 'auditor') return <AuditorDashboard />;
+  return <UserDashboard />;
 };
 
 export default DashboardPage;

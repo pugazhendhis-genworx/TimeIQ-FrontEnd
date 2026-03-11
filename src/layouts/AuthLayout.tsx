@@ -14,7 +14,7 @@ const AuthLayout = () => (
         Smart Timesheet<br />Processing, Simplified.
       </h1>
       <p className="auth-layout__desc">
-        TimeIQ transforms how staffing companies process employee timesheets —
+        TimeGuard transforms how staffing companies process employee timesheets —
         leveraging AI to reduce manual processing by 70-80%, minimise errors,
         and scale without proportional headcount growth.
       </p>

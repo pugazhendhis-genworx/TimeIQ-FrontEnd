@@ -2,7 +2,14 @@
  *  Auth feature – Redux slice (createAsyncThunk)
  * ────────────────────────────────────────────── */
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { loginApi, logoutApi, signupApi } from '../../services/authService';
+import {
+  loginApi,
+  logoutApi,
+  signupApi,
+  validateApi,
+  setAuthToken,
+  clearAuthToken,
+} from '../../services/authService';
 import type {
   AuthState,
   LoginPayload,
@@ -36,9 +43,32 @@ export const loginThunk = createAsyncThunk(
   'auth/login',
   async (payload: LoginPayload, { rejectWithValue }) => {
     try {
-      return await loginApi(payload);
+      const tokenRes = await loginApi(payload);
+      const user = await validateApi();
+      return { access_token: tokenRes.access_token, user };
     } catch (err) {
       return rejectWithValue(extractErrorMessage(err));
+    }
+  },
+);
+
+/**
+ * initAuthThunk – restore session from localStorage token on page refresh.
+ * Called by ProtectedRoute on mount when not authenticated.
+ */
+export const initAuthThunk = createAsyncThunk(
+  'auth/init',
+  async (_, { rejectWithValue }) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return rejectWithValue('No stored token');
+    setAuthToken(token);
+    try {
+      const user = await validateApi();
+      return { access_token: token, user };
+    } catch {
+      clearAuthToken();
+      localStorage.removeItem('access_token');
+      return rejectWithValue('Session expired');
     }
   },
 );
@@ -99,15 +129,35 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.accessToken = payload.access_token;
-        /*
-         * NOTE: The refresh_token is stored by the browser in an
-         * httpOnly cookie set by the server. It is never kept in
-         * Redux or localStorage — this is intentional for security.
-         */
+        state.user = {
+          user_id: payload.user.user_id,
+          role: payload.user.role,
+        };
       })
       .addCase(loginThunk.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = (payload as string) ?? 'Login failed';
+      });
+
+    /* init auth (session restore) */
+    builder
+      .addCase(initAuthThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(initAuthThunk.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.accessToken = payload.access_token;
+        state.user = {
+          user_id: payload.user.user_id,
+          role: payload.user.role,
+        };
+      })
+      .addCase(initAuthThunk.rejected, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.accessToken = null;
       });
 
     /* logout */

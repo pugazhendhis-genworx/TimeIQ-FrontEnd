@@ -1,12 +1,13 @@
 /* ──────────────────────────────────────────────
  *  Auth API service – all auth HTTP calls live here
  * ────────────────────────────────────────────── */
-import api from '../lib/axios';
+import api, { servicesApi } from '../lib/axios';
 import type {
   LoginPayload,
   SignupPayload,
   SignupResponse,
   TokenResponse,
+  ValidateResponse,
 } from '../types/auth.types';
 
 const AUTH_PREFIX = '/auth';
@@ -33,8 +34,10 @@ export const loginApi = async (payload: LoginPayload): Promise<TokenResponse> =>
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
-  /* Set the access token for all subsequent requests */
+  /* Set the access token for all subsequent requests (both instances) */
   api.defaults.headers.common.Authorization = `Bearer ${data.access_token}`;
+  servicesApi.defaults.headers.common.Authorization = `Bearer ${data.access_token}`;
+  localStorage.setItem('access_token', data.access_token);
 
   return data;
 };
@@ -67,8 +70,31 @@ export const forgotPasswordVerifyApi = async (payload: {
   return data;
 };
 
+/** GET /auth/validate — validates token and returns current user */
+export const validateApi = async (): Promise<ValidateResponse> => {
+  const { data } = await api.get<ValidateResponse>(`${AUTH_PREFIX}/validate`);
+  return data;
+};
+
+/** Set the Authorization header on both instances (used for session restoration) */
+export const setAuthToken = (token: string) => {
+  api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  servicesApi.defaults.headers.common.Authorization = `Bearer ${token}`;
+};
+
+/** Clear the Authorization header on both instances */
+export const clearAuthToken = () => {
+  delete api.defaults.headers.common.Authorization;
+  delete servicesApi.defaults.headers.common.Authorization;
+};
+
 /** POST /auth/logout — server clears the httpOnly refresh cookie */
 export const logoutApi = async (): Promise<void> => {
-  await api.post(`${AUTH_PREFIX}/logout`);
-  delete api.defaults.headers.common.Authorization;
+  try {
+    await api.post(`${AUTH_PREFIX}/logout`);
+  } finally {
+    delete api.defaults.headers.common.Authorization;
+    delete servicesApi.defaults.headers.common.Authorization;
+    localStorage.removeItem('access_token');
+  }
 };

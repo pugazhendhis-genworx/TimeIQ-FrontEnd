@@ -36,9 +36,22 @@ export interface TokenResponse {
   token_type: string;
 }
 
+// ── Validate ──────────────────────────────────
+export interface ValidateResponse {
+  user_id: string;
+  role: string;
+}
+
+export interface AuthUser {
+  user_id: string;
+  role: string;
+  user_name?: string;
+  email?: string;
+}
+
 // ── Auth slice state ──────────────────────────
 export interface AuthState {
-  user: Pick<SignupResponse, 'user_id' | 'user_name' | 'email' | 'role'> | null;
+  user: AuthUser | null;
   accessToken: string | null;
   isAuthenticated: boolean;
   loading: boolean;
