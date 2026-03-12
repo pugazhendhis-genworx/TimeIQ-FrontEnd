@@ -40,7 +40,10 @@ const EmailListPage = () => {
         (e) => (e.classification ?? '').toLowerCase() === classificationFilter,
       );
     }
-    return result;
+    /* Sort by received_at descending (newest first) */
+    return [...result].sort(
+      (a, b) => new Date(b.received_at).getTime() - new Date(a.received_at).getTime(),
+    );
   }, [emails, search, classificationFilter]);
 
   const selected = emails.find((e) => e.email_message_id === selectedId) ?? null;

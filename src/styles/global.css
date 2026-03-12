@@ -366,17 +366,18 @@ img {
   background: rgba(0, 82, 204, 0.06);
 }
 
-/* Danger / Logout */
+/* Danger */
 .btn--danger {
   background: transparent;
-  color: #ffffff;
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: var(--color-error);
+  border: 1.5px solid var(--color-error);
   font-weight: 600;
 }
 
 .btn--danger:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #ffffff;
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #991b1b;
 }
 
 /* Spinner */

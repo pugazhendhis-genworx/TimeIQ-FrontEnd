@@ -2,8 +2,13 @@
  *  Assignment feature – Redux slice
  * ────────────────────────────────────────────── */
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { createAssignmentApi, fetchAssignmentsApi } from '../../services/assignmentService';
-import type { AssignmentState } from '../../types/assignment.types';
+import {
+    createAssignmentApi,
+    fetchAssignmentsApi,
+    updateAssignmentApi,
+    deleteAssignmentApi,
+} from '../../services/assignmentService';
+import type { AssignmentState, AssignmentUpdatePayload } from '../../types/assignment.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: AssignmentState = {
@@ -45,6 +50,32 @@ export const createAssignmentThunk = createAsyncThunk(
     },
 );
 
+export const updateAssignmentThunk = createAsyncThunk(
+    'assignment/updateAssignment',
+    async (
+        args: { assignmentId: string; payload: AssignmentUpdatePayload },
+        { rejectWithValue },
+    ) => {
+        try {
+            return await updateAssignmentApi(args.assignmentId, args.payload);
+        } catch (err) {
+            return rejectWithValue(extractErrorMessage(err));
+        }
+    },
+);
+
+export const deleteAssignmentThunk = createAsyncThunk(
+    'assignment/deleteAssignment',
+    async (assignmentId: string, { rejectWithValue }) => {
+        try {
+            await deleteAssignmentApi(assignmentId);
+            return assignmentId;
+        } catch (err) {
+            return rejectWithValue(extractErrorMessage(err));
+        }
+    },
+);
+
 const assignmentSlice = createSlice({
     name: 'assignment',
     initialState,
@@ -74,9 +105,29 @@ const assignmentSlice = createSlice({
             .addCase(createAssignmentThunk.rejected, (state, { payload }) => {
                 state.error =
                     (payload as string) ?? 'Failed to create assignment';
+            })
+            .addCase(updateAssignmentThunk.fulfilled, (state, { payload }) => {
+                const idx = state.assignments.findIndex(
+                    (a) => a.assignment_id === payload.assignment_id,
+                );
+                if (idx !== -1) state.assignments[idx] = payload;
+            })
+            .addCase(updateAssignmentThunk.rejected, (state, { payload }) => {
+                state.error =
+                    (payload as string) ?? 'Failed to update assignment';
+            })
+            .addCase(deleteAssignmentThunk.fulfilled, (state, { payload }) => {
+                state.assignments = state.assignments.filter(
+                    (a) => a.assignment_id !== payload,
+                );
+            })
+            .addCase(deleteAssignmentThunk.rejected, (state, { payload }) => {
+                state.error =
+                    (payload as string) ?? 'Failed to delete assignment';
             });
     },
 });
 
 export const { clearAssignmentError } = assignmentSlice.actions;
 export default assignmentSlice.reducer;
+

@@ -15,6 +15,16 @@ export interface Assignment {
     is_active: boolean;
 }
 
+export interface AssignmentUpdatePayload {
+    start_date?: string;
+    end_date?: string;
+    regular_rate?: number;
+    overtime_rate?: number;
+    double_time_rate?: number;
+    paycode_id?: string | null;
+    is_active?: boolean;
+}
+
 export interface AssignmentState {
     assignments: Assignment[];
     assignmentsLoading: boolean;
