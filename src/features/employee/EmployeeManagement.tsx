@@ -7,11 +7,14 @@ import {
   fetchEmployeesThunk,
   deleteEmployeeThunk,
 } from './employeeSlice';
+import { createAssignmentThunk } from '../assignment/assignmentSlice';
+import { fetchClientsThunk } from '../client/clientSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { toast } from '../../utils/toast';
 import AddEmployeeModal from '../../components/employee/AddEmployeeModal';
 import ViewEmployeeModal from '../../components/employee/ViewEmployeeModal';
+import Modal from '../../components/common/Modal';
 
 const EmployeeManagement = () => {
   const dispatch = useAppDispatch();
@@ -23,12 +26,22 @@ const EmployeeManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [clientFilter, setClientFilter] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [viewEmployeeId, setViewEmployeeId] = useState<string | null>(
-    null,
-  );
+  const [viewEmployeeId, setViewEmployeeId] = useState<string | null>(null);
+
+  /* ── Assignment Modal State ──────────────── */
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [selectedEmployeeName, setSelectedEmployeeName] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [regularRate, setRegularRate] = useState('');
+  const [overtimeRate, setOvertimeRate] = useState('');
+  const [doubleTimeRate, setDoubleTimeRate] = useState('');
 
   useEffect(() => {
     dispatch(fetchEmployeesThunk());
+    dispatch(fetchClientsThunk());
   }, [dispatch]);
 
   const filtered = useMemo(() => {
@@ -59,6 +72,51 @@ const EmployeeManagement = () => {
       dispatch(fetchEmployeesThunk());
     } catch {
       toast('Failed to remove employee', 'error');
+    }
+  };
+
+  const openAssignModal = (empId: string, empName: string) => {
+    setSelectedEmployeeId(empId);
+    setSelectedEmployeeName(empName);
+    setSelectedClientId('');
+    setStartDate('');
+    setEndDate('');
+    setRegularRate('');
+    setOvertimeRate('');
+    setDoubleTimeRate('');
+    setAssignOpen(true);
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!selectedClientId) {
+      toast('Please select a client', 'error');
+      return;
+    }
+    if (!startDate || !endDate || !regularRate || !overtimeRate || !doubleTimeRate) {
+      toast('Please fill in all date and rate fields', 'error');
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to assign ${selectedEmployeeName} to this client?`)) {
+      return;
+    }
+    try {
+      await dispatch(
+        createAssignmentThunk({
+          employee_id: selectedEmployeeId,
+          client_id: selectedClientId,
+          start_date: startDate,
+          end_date: endDate,
+          regular_rate: parseFloat(regularRate),
+          overtime_rate: parseFloat(overtimeRate),
+          double_time_rate: parseFloat(doubleTimeRate),
+        }),
+      ).unwrap();
+      toast('Employee assigned successfully');
+      setAssignOpen(false);
+      dispatch(fetchEmployeesThunk());
+    } catch (error) {
+      console.error('Failed to create assignment:', error);
+      toast('Failed to create assignment', 'error');
     }
   };
 
@@ -115,6 +173,7 @@ const EmployeeManagement = () => {
                 <th>Email</th>
                 <th>Designation</th>
                 <th>Status</th>
+                <th>Assigned</th>
                 <th>Created At</th>
                 <th>Actions</th>
               </tr>
@@ -122,7 +181,7 @@ const EmployeeManagement = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="no-data">
+                  <td colSpan={8} className="no-data">
                     No employees match your filters
                   </td>
                 </tr>
@@ -137,6 +196,11 @@ const EmployeeManagement = () => {
                         {e.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
+                    <td>
+                      <Badge variant={e.assigned ? 'matched' : 'employee_unmatched'}>
+                        {e.assigned ? 'Assigned' : 'Unassigned'}
+                      </Badge>
+                    </td>
                     <td
                       style={{
                         fontSize: '0.82rem',
@@ -146,20 +210,29 @@ const EmployeeManagement = () => {
                       {new Date(e.created_at).toLocaleDateString()}
                     </td>
                     <td>
-                      <Button
-                        variant="ghost"
-                        className="btn--sm"
-                        onClick={() => setViewEmployeeId(e.employee_id)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="btn--sm"
-                        onClick={() => handleDelete(e.employee_id)}
-                      >
-                        Remove
-                      </Button>
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <Button
+                          variant="secondary"
+                          className="btn--sm"
+                          onClick={() => openAssignModal(e.employee_id, `${e.first_name} ${e.last_name}`)}
+                        >
+                          {e.assigned ? 'Reassign' : 'Assign'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="btn--sm"
+                          onClick={() => setViewEmployeeId(e.employee_id)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="danger"
+                          className="btn--sm"
+                          onClick={() => handleDelete(e.employee_id)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -178,6 +251,90 @@ const EmployeeManagement = () => {
         employeeId={viewEmployeeId}
         onClose={() => setViewEmployeeId(null)}
       />
+
+      <Modal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        title="Assign Employee"
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setAssignOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="btn--sm" onClick={handleAssignSubmit}>
+              Confirm Assignment
+            </Button>
+          </>
+        }
+      >
+        <div className="detail-row">
+          <span className="detail-label">Employee</span>
+          <span style={{ fontWeight: 600 }}>{selectedEmployeeName}</span>
+        </div>
+        <div className="detail-row">
+          <span className="detail-label">Select Client</span>
+          <select
+            value={selectedClientId}
+            onChange={(e) => setSelectedClientId(e.target.value)}
+            style={{ width: '100%' }}
+          >
+            <option value="">-- Select Client --</option>
+            {clients.map((c) => (
+              <option key={c.client_id} value={c.client_id}>
+                {c.client_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="detail-row">
+          <span className="detail-label">Start Date</span>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div className="detail-row">
+          <span className="detail-label">End Date</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div className="detail-row">
+          <span className="detail-label">Regular Rate ($/hr)</span>
+          <input
+            type="number"
+            step="0.01"
+            value={regularRate}
+            onChange={(e) => setRegularRate(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div className="detail-row">
+          <span className="detail-label">Overtime Rate ($/hr)</span>
+          <input
+            type="number"
+            step="0.01"
+            value={overtimeRate}
+            onChange={(e) => setOvertimeRate(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div className="detail-row">
+          <span className="detail-label">Double Time Rate ($/hr)</span>
+          <input
+            type="number"
+            step="0.01"
+            value={doubleTimeRate}
+            onChange={(e) => setDoubleTimeRate(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </Modal>
     </>
   );
 };

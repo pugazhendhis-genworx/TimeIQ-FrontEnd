@@ -18,6 +18,7 @@ const EmailListPage = () => {
   const { emails, emailsLoading, processing, reprocessing } = useAppSelector((s) => s.email);
   const [search, setSearch] = useState('');
   const [classificationFilter, setClassificationFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -36,15 +37,21 @@ const EmailListPage = () => {
       );
     }
     if (classificationFilter) {
-      result = result.filter(
-        (e) => (e.classification ?? '').toLowerCase() === classificationFilter,
-      );
+      if (classificationFilter === 'non_timesheet') {
+        result = result.filter((e) => (e.classification ?? '').toLowerCase() === 'other');
+      } else {
+        result = result.filter(
+          (e) => (e.classification ?? '').toLowerCase() === classificationFilter,
+        );
+      }
     }
-    /* Sort by received_at descending (newest first) */
-    return [...result].sort(
-      (a, b) => new Date(b.received_at).getTime() - new Date(a.received_at).getTime(),
-    );
-  }, [emails, search, classificationFilter]);
+    /* Sort by received_at based on sortOrder */
+    return [...result].sort((a, b) => {
+      const timeA = new Date(a.received_at).getTime();
+      const timeB = new Date(b.received_at).getTime();
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+  }, [emails, search, classificationFilter, sortOrder]);
 
   const selected = emails.find((e) => e.email_message_id === selectedId) ?? null;
 
@@ -119,8 +126,15 @@ const EmailListPage = () => {
           >
             <option value="">All Types</option>
             <option value="timesheet">Timesheet</option>
-            <option value="non_timesheet">Non-timesheet</option>
+            <option value="non_timesheet">Other (Non-timesheet)</option>
           </select>
+          <Button
+            variant="secondary"
+            className="btn--sm"
+            onClick={() => setSortOrder((s) => (s === 'desc' ? 'asc' : 'desc'))}
+          >
+            {sortOrder === 'desc' ? '↓ Newest First' : '↑ Oldest First'}
+          </Button>
         </div>
 
         {(processing || reprocessing) && (

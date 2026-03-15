@@ -6,11 +6,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetsThunk } from './extractedSlice';
+import { fetchEmailsThunk } from '../email/emailSlice';
 import { approveTimesheetApi, rejectTimesheetApi } from '../../services/extractedDataService';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import { toast } from '../../utils/toast';
+import config from '../../config/apiConfig';
 
 const statusLabelMap: Record<string, string> = {
     RECEIVED: 'Received',
@@ -25,24 +27,40 @@ const statusLabelMap: Record<string, string> = {
 const ExtractedTimesheetsPage = () => {
     const dispatch = useAppDispatch();
     const { extractedData, loading } = useAppSelector((s) => s.extracted);
+    const { emails } = useAppSelector((s) => s.email);
     const [search, setSearch] = useState('');
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [selectedTimesheet, setSelectedTimesheet] = useState<any>(null);
     const [detailOpen, setDetailOpen] = useState(false);
 
+    /* Email detail modal state */
+    const [emailModalOpen, setEmailModalOpen] = useState(false);
+    const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+
     useEffect(() => {
         dispatch(fetchExtractedTimesheetsThunk());
+        dispatch(fetchEmailsThunk());
     }, [dispatch]);
 
     const filtered = useMemo(() => {
-        if (!search) return extractedData;
-        const q = search.toLowerCase();
-        return extractedData.filter(
-            (t) =>
-                t.client_name.toLowerCase().includes(q) ||
-                t.sender_email.toLowerCase().includes(q) ||
-                t.week_ending?.toLowerCase().includes(q),
-        );
-    }, [extractedData, search]);
+        let result = extractedData;
+        
+        if (search) {
+            const q = search.toLowerCase();
+            result = result.filter(
+                (t) =>
+                    t.client_name?.toLowerCase().includes(q) ||
+                    t.sender_email?.toLowerCase().includes(q) ||
+                    t.week_ending?.toLowerCase().includes(q)
+            );
+        }
+        
+        return [...result].sort((a, b) => {
+            const dateA = new Date(a.received_at).getTime();
+            const dateB = new Date(b.received_at).getTime();
+            return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        });
+    }, [extractedData, search, sortOrder]);
 
     const openDetail = (timesheet: any) => {
         setSelectedTimesheet(timesheet);
@@ -73,6 +91,13 @@ const ExtractedTimesheetsPage = () => {
         }
     };
 
+    const openEmailModal = (emailMessageId: string) => {
+        setSelectedEmailId(emailMessageId);
+        setEmailModalOpen(true);
+    };
+
+    const selectedEmail = emails.find((e) => e.email_message_id === selectedEmailId) ?? null;
+
     return (
         <>
             <div className="page-header">
@@ -86,14 +111,21 @@ const ExtractedTimesheetsPage = () => {
             </div>
 
             <div className="table-wrap">
-                <div className="table-toolbar">
+                <div className="table-toolbar" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <input
                         className="table-toolbar__input"
                         type="text"
                         placeholder="Search by client, sender email, or week…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        style={{ flex: 1 }}
                     />
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    >
+                        Sort: {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+                    </Button>
                 </div>
 
                 {loading ? (
@@ -147,13 +179,20 @@ const ExtractedTimesheetsPage = () => {
                                                 : '—'}
                                         </td>
                                         <td>{t.entries.length}</td>
-                                        <td>
+                                        <td style={{ display: 'flex', gap: '0.5rem' }}>
                                             <Button
                                                 variant="ghost"
                                                 className="btn--sm"
                                                 onClick={() => openDetail(t)}
                                             >
                                                 View Details
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                className="btn--sm"
+                                                onClick={() => openEmailModal(t.email_message_id)}
+                                            >
+                                                View Source Email
                                             </Button>
                                         </td>
                                     </tr>
@@ -251,6 +290,74 @@ const ExtractedTimesheetsPage = () => {
                     </div>
                 </Modal>
             )}
+
+            {/* Source Email Detail modal */}
+            <Modal
+                open={emailModalOpen}
+                onClose={() => setEmailModalOpen(false)}
+                title="Source Email"
+                size="lg"
+                actions={
+                    <Button variant="ghost" onClick={() => setEmailModalOpen(false)}>Close</Button>
+                }
+            >
+                {selectedEmail ? (
+                    <>
+                        <div className="detail-row">
+                            <span className="detail-label">Sender</span>
+                            <span>{selectedEmail.sender_email}</span>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">Received At</span>
+                            <span>{new Date(selectedEmail.received_at).toLocaleString()}</span>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">Subject</span>
+                            <span>{selectedEmail.subject ?? '—'}</span>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">Classification</span>
+                            <span>{selectedEmail.classification ?? '—'}</span>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">Processed Status</span>
+                            <span>{selectedEmail.processed_status ?? '—'}</span>
+                        </div>
+                        <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+                            <strong>Body Preview</strong>
+                            <p style={{ marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>
+                                {selectedEmail.body ?? 'No body available'}
+                            </p>
+                        </div>
+                        <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+                            <strong>Attachments</strong>
+                            {selectedEmail.attachments.length === 0 ? (
+                                <p style={{ marginTop: '0.25rem' }}>No attachments</p>
+                            ) : (
+                                <ul style={{ marginTop: '0.25rem', paddingLeft: '1.25rem' }}>
+                                    {selectedEmail.attachments.map((att) => (
+                                        <li key={att.attachment_id}>
+                                            <a
+                                                href={`${config.SERVICES_API_BASE_URL}/attachments/${encodeURIComponent(
+                                                    att.file_name,
+                                                )}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                {att.file_name}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <div className="no-data">
+                        Email not found. The source email may not have been loaded yet.
+                    </div>
+                )}
+            </Modal>
         </>
     );
 };
