@@ -16,7 +16,7 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { toast } from '../../utils/toast';
-import type { Assignment } from '../../types/assignment.types';
+import type { Assignment } from './types/assignment.types';
 
 const AssignmentManagement = () => {
     const dispatch = useAppDispatch();

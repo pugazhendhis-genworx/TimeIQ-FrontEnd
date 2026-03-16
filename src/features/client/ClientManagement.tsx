@@ -9,7 +9,7 @@ import {
 } from './clientSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
-import AddClientModal from '../../components/dashboard/AddClientModal';
+import AddClientModal from './components/AddClientModal';
 import { toast } from '../../utils/toast';
 
 const ClientManagement = () => {

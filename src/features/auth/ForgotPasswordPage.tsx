@@ -14,7 +14,7 @@ import { isEmailValid, isPasswordValid } from '../../utils/validation';
 import {
   forgotPasswordRequestApi,
   forgotPasswordVerifyApi,
-} from '../../services/authService';
+} from './services/authService';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 type Step = 'email' | 'otp' | 'reset';

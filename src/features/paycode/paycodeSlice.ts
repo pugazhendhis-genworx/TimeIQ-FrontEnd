@@ -5,8 +5,8 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
     fetchPaycodesApi,
     createPaycodeApi,
-} from '../../services/paycodeService';
-import type { PaycodeState, Paycode } from '../../types/paycode.types';
+} from './services/paycodeService';
+import type { PaycodeState, Paycode } from './types/paycode.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: PaycodeState = {

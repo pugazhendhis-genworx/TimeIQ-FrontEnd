@@ -2,7 +2,7 @@
  *  Normalise API / Axios errors into user-friendly strings
  * ────────────────────────────────────────────── */
 import type { AxiosError } from 'axios';
-import type { ApiErrorResponse } from '../types/auth.types';
+import type { ApiErrorResponse } from '../features/auth/types/auth.types';
 
 export const extractErrorMessage = (error: unknown): string => {
   const axiosErr = error as AxiosError<ApiErrorResponse>;

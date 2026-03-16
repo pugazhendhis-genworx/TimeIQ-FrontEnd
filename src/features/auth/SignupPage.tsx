@@ -4,7 +4,7 @@
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { signupThunk, clearAuthError, resetSignupSuccess } from './authSlice';
-import SignupForm from '../../components/forms/SignupForm';
+import SignupForm from './components/SignupForm';
 import Alert from '../../components/common/Alert';
 
 const SignupPage = () => {

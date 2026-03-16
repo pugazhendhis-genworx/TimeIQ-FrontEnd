@@ -7,8 +7,8 @@ import {
     fetchAssignmentsApi,
     updateAssignmentApi,
     deleteAssignmentApi,
-} from '../../services/assignmentService';
-import type { AssignmentState, AssignmentUpdatePayload } from '../../types/assignment.types';
+} from './services/assignmentService';
+import type { AssignmentState, AssignmentUpdatePayload } from './types/assignment.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: AssignmentState = {

@@ -2,7 +2,7 @@
  *  Admin Dashboard Overview – stats + recent users
  * ────────────────────────────────────────────── */
 import { useAppSelector } from '../../hooks/reduxHooks';
-import StatsCard from '../../components/dashboard/StatsCard';
+import StatsCard from './components/StatsCard';
 import Badge from '../../components/common/Badge';
 
 const AdminOverview = () => {

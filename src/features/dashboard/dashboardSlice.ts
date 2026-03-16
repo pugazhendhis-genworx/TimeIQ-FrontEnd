@@ -7,8 +7,8 @@ import {
   fetchRolesApi,
   fetchUserByIdApi,
   createUserApi,
-} from '../../services/userService';
-import type { DashboardState, CreateUserPayload } from '../../types/dashboard.types';
+} from './services/userService';
+import type { DashboardState, CreateUserPayload } from './types/dashboard.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 /* ── Initial state ────────────────────────────── */

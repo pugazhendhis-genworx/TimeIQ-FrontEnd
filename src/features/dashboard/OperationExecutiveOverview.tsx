@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchTimesheetsThunk } from '../timesheet/timesheetSlice';
 import { fetchEmailsThunk } from '../email/emailSlice';
 import { fetchAssignmentsThunk } from '../assignment/assignmentSlice';
-import StatsCard from '../../components/dashboard/StatsCard';
+import StatsCard from './components/StatsCard';
 import Badge from '../../components/common/Badge';
 
 const fmt = (iso: string | null) =>

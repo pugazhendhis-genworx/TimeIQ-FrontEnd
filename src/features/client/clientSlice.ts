@@ -6,8 +6,8 @@ import {
   fetchClientsApi,
   createClientApi,
   toggleClientStatusApi,
-} from '../../services/clientService';
-import type { ClientState, CreateClientPayload } from '../../types/client.types';
+} from './services/clientService';
+import type { ClientState, CreateClientPayload } from './types/client.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 /* ── Initial state ────────────────────────────── */

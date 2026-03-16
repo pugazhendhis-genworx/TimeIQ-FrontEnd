@@ -6,8 +6,8 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchUserByIdThunk } from './dashboardSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
-import AddUserModal from '../../components/dashboard/AddUserModal';
-import ViewUserModal from '../../components/dashboard/ViewUserModal';
+import AddUserModal from './components/AddUserModal';
+import ViewUserModal from './components/ViewUserModal';
 import { toast } from '../../utils/toast';
 
 const UserManagement = () => {
