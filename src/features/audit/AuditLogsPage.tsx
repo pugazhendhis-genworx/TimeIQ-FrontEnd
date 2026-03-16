@@ -33,7 +33,9 @@ const AuditLogsPage = () => {
             onChange={(e) => setResourceFilter(e.target.value)}
           >
             <option value="">All Resources</option>
+            <option value="">All Resources</option>
             <option value="TIMESHEET">Timesheet</option>
+            <option value="ASSIGNMENT">Assignment</option>
             <option value="EMAIL">Email</option>
           </select>
         </div>
@@ -50,12 +52,13 @@ const AuditLogsPage = () => {
                 <th>Resource ID</th>
                 <th>Action</th>
                 <th>Actor</th>
+                <th>Metadata</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="no-data">
+                  <td colSpan={6} className="no-data">
                     No logs match your filters
                   </td>
                 </tr>
@@ -64,9 +67,12 @@ const AuditLogsPage = () => {
                   <tr key={l.audit_log_id}>
                     <td>{new Date(l.created_at).toLocaleString()}</td>
                     <td>{l.entity_type}</td>
-                    <td>{l.entity_id}</td>
+                    <td style={{ fontSize: '0.82rem' }}>{l.entity_id}</td>
                     <td>{l.action}</td>
                     <td>{l.user_id || '—'}</td>
+                    <td style={{ fontSize: '0.82rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {l.metadata_json ? JSON.stringify(l.metadata_json) : '—'}
+                    </td>
                   </tr>
                 ))
               )}

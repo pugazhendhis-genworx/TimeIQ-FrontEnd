@@ -1,7 +1,7 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, type ReactNode } from 'react';
 
 interface Props {
-    children: ReactNode;
+    children?: ReactNode;
 }
 
 interface State {

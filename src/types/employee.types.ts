@@ -12,6 +12,7 @@ export interface Employee {
   designation: string;
   is_active: boolean;
   created_at: string;
+  assigned?: boolean;
 }
 
 export interface CreateEmployeePayload {

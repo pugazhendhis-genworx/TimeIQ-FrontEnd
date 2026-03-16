@@ -22,11 +22,13 @@ const DashboardLayout = () => {
 
   /* Fetch shared data on mount */
   useEffect(() => {
-    dispatch(fetchUsersThunk());
-    dispatch(fetchRolesThunk());
-    dispatch(fetchClientsThunk());
-    dispatch(fetchWhitelistsThunk());
-  }, [dispatch]);
+    if (role !== 'auditor') {
+      dispatch(fetchUsersThunk());
+      dispatch(fetchRolesThunk());
+      dispatch(fetchClientsThunk());
+      dispatch(fetchWhitelistsThunk());
+    }
+  }, [dispatch, role]);
 
   return (
     <div className="dashboard-shell">

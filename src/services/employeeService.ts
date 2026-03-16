@@ -12,7 +12,7 @@ const EMPLOYEE_PREFIX = '/employee';
 
 export const fetchEmployeesApi = async (): Promise<Employee[]> => {
   const { data } = await servicesApi.get<Employee[]>(
-    `${EMPLOYEE_PREFIX}/get-employees`,
+    `${EMPLOYEE_PREFIX}/get-employees-with-assign-status`,
   );
   return data;
 };

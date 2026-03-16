@@ -6,6 +6,7 @@ import AuthLayout from '../layouts/AuthLayout';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import RoleGuard from '../components/common/RoleGuard';
 import { SignupPage, LoginPage, ForgotPasswordPage } from '../features/auth';
 import {
   DashboardPage,
@@ -22,7 +23,6 @@ import { ExtractedTimesheetsPage } from '../features/extracted';
 import { AssignmentManagement } from '../features/assignment';
 import { PaycodeManagement } from '../features/paycode';
 import { AuditorDashboard, AuditorTimesheetPage, AuditLogsPage } from '../features/audit';
-// Assignment and Payroll features will be added under these routes
 
 const router = createBrowserRouter([
   /* ── Public auth routes ────────────────────── */
@@ -41,32 +41,37 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: [
       {
-        element: <DashboardLayout />,
+        /* RoleGuard checks the user's role against routePermissions */
+        element: <RoleGuard />,
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
-          { path: '/dashboard/users', element: <UserManagement /> },
-          { path: '/dashboard/roles', element: <RolesPage /> },
-          { path: '/dashboard/clients', element: <ClientManagement /> },
-          { path: '/dashboard/whitelist', element: <WhitelistManagement /> },
-          { path: '/dashboard/employees', element: <EmployeeManagement /> },
-          { path: '/dashboard/emails', element: <EmailListPage /> },
-          { path: '/dashboard/timesheet-emails', element: <TimesheetEmailPage /> },
-          { path: '/dashboard/timesheets', element: <TimesheetListPage /> },
           {
-            path: '/dashboard/extracted-timesheets/:timesheetId',
-            element: <ExtractedTimesheetPage />,
+            element: <DashboardLayout />,
+            children: [
+              { path: '/dashboard', element: <DashboardPage /> },
+              { path: '/dashboard/users', element: <UserManagement /> },
+              { path: '/dashboard/roles', element: <RolesPage /> },
+              { path: '/dashboard/clients', element: <ClientManagement /> },
+              { path: '/dashboard/whitelist', element: <WhitelistManagement /> },
+              { path: '/dashboard/employees', element: <EmployeeManagement /> },
+              { path: '/dashboard/emails', element: <EmailListPage /> },
+              { path: '/dashboard/timesheet-emails', element: <TimesheetEmailPage /> },
+              { path: '/dashboard/timesheets', element: <TimesheetListPage /> },
+              {
+                path: '/dashboard/extracted-timesheets/:timesheetId',
+                element: <ExtractedTimesheetPage />,
+              },
+              { path: '/dashboard/assignments', element: <AssignmentManagement /> },
+              { path: '/dashboard/payroll', element: <PaycodeManagement /> },
+              { path: '/dashboard/extracted-timesheets', element: <ExtractedTimesheetsPage /> },
+              { path: '/dashboard/audit', element: <AuditorDashboard /> },
+              {
+                path: '/dashboard/audit-timesheets',
+                element: <AuditorTimesheetPage />,
+              },
+              { path: '/dashboard/audit-logs', element: <AuditLogsPage /> },
+              { path: '/dashboard/profile', element: <ProfilePage /> },
+            ],
           },
-          { path: '/dashboard/assignments', element: <AssignmentManagement /> },
-          { path: '/dashboard/payroll', element: <PaycodeManagement /> },
-          { path: '/dashboard/extracted-timesheets', element: <ExtractedTimesheetsPage /> },
-          // assignments and payroll routes are now handled above
-          { path: '/dashboard/audit', element: <AuditorDashboard /> },
-          {
-            path: '/dashboard/audit-timesheets',
-            element: <AuditorTimesheetPage />,
-          },
-          { path: '/dashboard/audit-logs', element: <AuditLogsPage /> },
-          { path: '/dashboard/profile', element: <ProfilePage /> },
         ],
       },
     ],

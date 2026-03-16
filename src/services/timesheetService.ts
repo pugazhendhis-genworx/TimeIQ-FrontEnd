@@ -5,7 +5,6 @@ import { servicesApi } from '../lib/axios';
 import type {
   Timesheet,
   TimeEntryRaw,
-  TimesheetStatus,
   ExtractedTimesheetDisplay,
 } from '../types/timesheet.types';
 
@@ -20,7 +19,7 @@ export const fetchTimesheetsApi = async (): Promise<Timesheet[]> => {
 };
 
 export const fetchTimesheetsByStatusApi = async (
-  status: TimesheetStatus | string,
+  status: string,
 ): Promise<Timesheet[]> => {
   const { data } = await servicesApi.get<Timesheet[]>(
     `${TIMESHEET_PREFIX}/status/${status}`,
