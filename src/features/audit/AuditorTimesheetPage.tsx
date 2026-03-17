@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchPendingReviewsThunk } from './auditSlice';
-import { approveTimesheetApi, rejectTimesheetApi } from '../../services/extractedDataService';
+import { approveTimesheetApi, rejectTimesheetApi } from '../extracted/services/extractedDataService';
 import Button from '../../components/common/Button';
 import { toast } from '../../utils/toast';
 

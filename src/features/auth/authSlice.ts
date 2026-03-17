@@ -9,12 +9,12 @@ import {
   validateApi,
   setAuthToken,
   clearAuthToken,
-} from '../../services/authService';
+} from './services/authService';
 import type {
   AuthState,
   LoginPayload,
   SignupPayload,
-} from '../../types/auth.types';
+} from './types/auth.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 /* ── Initial state ────────────────────────────── */

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetsThunk } from './extractedSlice';
 import { fetchEmailsThunk } from '../email/emailSlice';
-import { approveTimesheetApi, rejectTimesheetApi } from '../../services/extractedDataService';
+import { approveTimesheetApi, rejectTimesheetApi } from './services/extractedDataService';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';

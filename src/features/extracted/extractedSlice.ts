@@ -5,8 +5,8 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
     fetchExtractedTimesheetsApi,
     fetchExtractedTimesheetByIdApi,
-} from '../../services/extractedDataService';
-import type { ExtractionState } from '../../types/extracted.types';
+} from './services/extractedDataService';
+import type { ExtractionState } from './types/extracted.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: ExtractionState = {

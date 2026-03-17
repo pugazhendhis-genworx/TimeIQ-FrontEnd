@@ -11,8 +11,8 @@ import {
 } from '../features/dashboard/dashboardSlice';
 import { fetchClientsThunk } from '../features/client/clientSlice';
 import { fetchWhitelistsThunk } from '../features/whitelist/whitelistSlice';
-import Topbar from '../components/dashboard/Topbar';
-import Sidebar from '../components/dashboard/Sidebar';
+import Topbar from '../features/dashboard/components/Topbar';
+import Sidebar from '../features/dashboard/components/Sidebar';
 
 const DashboardLayout = () => {
   const dispatch = useAppDispatch();

@@ -8,11 +8,11 @@ import {
   submitManualReviewDecisionApi,
   fetchApprovalsApi,
   fetchAuditLogsApi,
-} from '../../services/auditService';
+} from './services/auditService';
 import type {
   AuditState,
   AuditDecision,
-} from '../../types/audit.types';
+} from './types/audit.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: AuditState = {

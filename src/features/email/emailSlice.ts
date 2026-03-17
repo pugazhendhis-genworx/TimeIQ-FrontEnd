@@ -7,8 +7,8 @@ import {
   fetchTimesheetEmailsApi,
   processAllEmailsApi,
   reprocessFailedEmailsApi,
-} from '../../services/emailService';
-import type { EmailState } from '../../types/email.types';
+} from './services/emailService';
+import type { EmailState } from './types/email.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: EmailState = {

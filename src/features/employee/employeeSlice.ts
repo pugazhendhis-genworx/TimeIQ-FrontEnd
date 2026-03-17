@@ -7,12 +7,12 @@ import {
   createEmployeeApi,
   updateEmployeeApi,
   deleteEmployeeApi,
-} from '../../services/employeeService';
+} from './services/employeeService';
 import type {
   EmployeeState,
   CreateEmployeePayload,
   UpdateEmployeePayload,
-} from '../../types/employee.types';
+} from './types/employee.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: EmployeeState = {

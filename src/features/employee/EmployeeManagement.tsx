@@ -12,8 +12,8 @@ import { fetchClientsThunk } from '../client/clientSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { toast } from '../../utils/toast';
-import AddEmployeeModal from '../../components/employee/AddEmployeeModal';
-import ViewEmployeeModal from '../../components/employee/ViewEmployeeModal';
+import AddEmployeeModal from './components/AddEmployeeModal';
+import ViewEmployeeModal from './components/ViewEmployeeModal';
 import Modal from '../../components/common/Modal';
 
 const EmployeeManagement = () => {

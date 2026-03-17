@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchTimesheetsThunk } from '../timesheet/timesheetSlice';
-import StatsCard from '../../components/dashboard/StatsCard';
+import StatsCard from '../dashboard/components/StatsCard';
 import {
   PieChart,
   Pie,

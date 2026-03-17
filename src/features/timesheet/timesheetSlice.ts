@@ -11,14 +11,14 @@ import {
   submitTimesheetForApprovalApi,
   updateTimesheetApi,
   fetchExtractedTimesheetByIdApi,
-} from '../../services/timesheetService';
+} from './services/timesheetService';
 import type {
   TimesheetState,
   TimesheetFilters,
   Timesheet,
   TimeEntryRaw,
   ExtractedTimesheetDisplay,
-} from '../../types/timesheet.types';
+} from './types/timesheet.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 const initialState: TimesheetState = {

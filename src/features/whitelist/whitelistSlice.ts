@@ -5,11 +5,11 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
   fetchWhitelistsApi,
   createWhitelistApi,
-} from '../../services/whitelistService';
+} from './services/whitelistService';
 import type {
   WhitelistState,
   CreateWhitelistPayload,
-} from '../../types/whitelist.types';
+} from './types/whitelist.types';
 import { extractErrorMessage } from '../../utils/errorHelpers';
 
 /* ── Initial state ────────────────────────────── */

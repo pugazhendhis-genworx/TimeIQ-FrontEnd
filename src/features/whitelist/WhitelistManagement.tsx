@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchWhitelistsThunk } from './whitelistSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
-import AddWhitelistModal from '../../components/dashboard/AddWhitelistModal';
+import AddWhitelistModal from './components/AddWhitelistModal';
 
 const WhitelistManagement = () => {
   const dispatch = useAppDispatch();
