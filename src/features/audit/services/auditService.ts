@@ -5,8 +5,7 @@ import { servicesApi } from '../../../lib/axios';
 import type {
   ManualReviewItem,
   ApprovalRecord,
-  AuditLog,
-  AuditDecision,
+  AuditLog
 } from '../types/audit.types';
 
 const MANUAL_REVIEW_PREFIX = '/manual-review';
