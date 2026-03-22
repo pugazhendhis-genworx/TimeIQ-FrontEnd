@@ -12,6 +12,7 @@ import {
   fetchExtractedTimesheetThunk,
   updateTimesheetThunk,
 } from './timesheetSlice';
+import { fetchFlaggedTimesheetsThunk } from '../rule-violations/ruleViolationSlice';
 import { fetchEmployeesThunk } from '../employee/employeeSlice';
 import { fetchEmailsThunk } from '../email/emailSlice';
 import Button from '../../components/common/Button';
@@ -55,6 +56,7 @@ const TimesheetListPage = () => {
     extractedById,
     extractedLoading,
   } = useAppSelector((s) => s.timesheet);
+  const { flaggedList } = useAppSelector((s) => s.ruleViolation);
   const { clients } = useAppSelector((s) => s.client);
   const { employees } = useAppSelector((s) => s.employee);
   const { emails } = useAppSelector((s) => s.email);
@@ -71,10 +73,16 @@ const TimesheetListPage = () => {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
 
+  const flaggedIds = useMemo(
+    () => new Set(flaggedList.map((f) => f.timesheet_id)),
+    [flaggedList],
+  );
+
   useEffect(() => {
     dispatch(fetchTimesheetsThunk());
     dispatch(fetchEmployeesThunk());
     dispatch(fetchEmailsThunk());
+    dispatch(fetchFlaggedTimesheetsThunk());
   }, [dispatch]);
 
   /* Pre-load raw entries for employee-name search */
@@ -220,6 +228,7 @@ const TimesheetListPage = () => {
                 <th>Status</th>
                 <th>Source</th>
                 <th>Week Ending</th>
+                <th>Rule status</th>
                 <th>Extraction</th>
                 <th>Updated</th>
                 <th>Actions</th>
@@ -228,7 +237,7 @@ const TimesheetListPage = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="no-data">No timesheets match your filters</td>
+                  <td colSpan={9} className="no-data">No timesheets match your filters</td>
                 </tr>
               ) : (
                 filtered.map((t) => {
@@ -266,6 +275,13 @@ const TimesheetListPage = () => {
                       </td>
                       <td>{t.source ?? '—'}</td>
                       <td>{fmtDate(t.week_ending)}</td>
+                      <td>
+                        {flaggedIds.has(t.timesheet_id) ? (
+                          <Badge variant="assignment_violation">rule_violated</Badge>
+                        ) : (
+                          <Badge variant="matched">rule_not_violated</Badge>
+                        )}
+                      </td>
                       <td>{t.extraction_status ?? '—'}</td>
                       <td>{fmt(t.updated_at)}</td>
                       <td>
@@ -298,14 +314,16 @@ const TimesheetListPage = () => {
                               >
                                 Edit
                               </Button>
-                              <Button
-                                variant="secondary"
-                                className="btn--sm"
-                                onClick={() => handleSubmitForApproval(t.timesheet_id)}
-                                disabled={t.status === 'READY_FOR_APPROVAL'}
-                              >
-                                Move to approval
-                              </Button>
+                              {!flaggedIds.has(t.timesheet_id) && (
+                                <Button
+                                  variant="secondary"
+                                  className="btn--sm"
+                                  onClick={() => handleSubmitForApproval(t.timesheet_id)}
+                                  disabled={t.status === 'READY_FOR_APPROVAL'}
+                                >
+                                  Move to approval
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>

@@ -30,10 +30,6 @@ const ViewUserModal = ({ open, onClose }: ViewUserModalProps) => {
       }
     >
       <div className="detail-row">
-        <span className="detail-label">User ID</span>
-        <span>{u.user_id}</span>
-      </div>
-      <div className="detail-row">
         <span className="detail-label">Name</span>
         <span>{u.name}</span>
       </div>

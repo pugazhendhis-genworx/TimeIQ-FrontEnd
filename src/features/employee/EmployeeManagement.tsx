@@ -181,7 +181,7 @@ const EmployeeManagement = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="no-data">
+                  <td colSpan={7} className="no-data">
                     No employees match your filters
                   </td>
                 </tr>

@@ -16,7 +16,7 @@ const Topbar = () => {
   };
 
   const displayLabel = user
-    ? `${(user.role ?? '').toUpperCase()} — ${user.user_id}`
+    ? `${(user.role ?? '').toUpperCase()} — ${user.user_name || user.email || 'Signed in'}`
     : '';
 
     
@@ -25,7 +25,7 @@ const Topbar = () => {
 
   return (
     <div className="topbar">
-      <h2 className="topbar__brand">TimeGuard {user?.role}</h2>
+      <h2 className="topbar__brand">TimeGuard</h2>
       <div className="topbar__right">
         <span className="topbar__user-pill">{displayLabel}</span>
         <button className="topbar__logout" onClick={handleLogout} type="button">

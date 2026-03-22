@@ -12,7 +12,7 @@ const ProfilePage = () => {
 
   /* Merge validate data with enriched user from users list */
   const fullUser = users.find((u) => u.user_id === user.user_id);
-  const name = fullUser?.name ?? user.user_name ?? user.user_id;
+  const name = fullUser?.name ?? user.user_name ?? 'Account';
   const email = fullUser?.email ?? user.email ?? '—';
   const contactNo = fullUser?.contact_no ?? '—';
   const role = fullUser?.role ?? user.role ?? '—';
@@ -28,10 +28,6 @@ const ProfilePage = () => {
 
       <div className="profile-card">
         <div className="profile-card__avatar">{initials}</div>
-        <div className="profile-card__row">
-          <span className="profile-card__label">User ID</span>
-          <span>{user.user_id}</span>
-        </div>
         <div className="profile-card__row">
           <span className="profile-card__label">Name</span>
           <span>{name}</span>

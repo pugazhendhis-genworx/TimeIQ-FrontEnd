@@ -87,7 +87,6 @@ const UserManagement = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>User ID</th>
               <th>Name</th>
               <th>Email</th>
               <th>Contact</th>
@@ -99,21 +98,13 @@ const UserManagement = () => {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">
+                <td colSpan={6} className="no-data">
                   No users match your filters
                 </td>
               </tr>
             ) : (
               filtered.map((u) => (
                 <tr key={u.user_id}>
-                  <td
-                    style={{
-                      fontSize: '0.78rem',
-                      color: 'var(--color-text-muted)',
-                    }}
-                  >
-                    {u.user_id}
-                  </td>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
                   <td>{u.contact_no || '—'}</td>

@@ -3,7 +3,7 @@
  *  Shows all extracted data with full employee/client names
  *  Supports review, approval, rejection workflow
  * ────────────────────────────────────────────── */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetsThunk } from './extractedSlice';
 import { fetchEmailsThunk } from '../email/emailSlice';
@@ -61,6 +61,10 @@ const ExtractedTimesheetsPage = () => {
             return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
         });
     }, [extractedData, search, sortOrder]);
+
+    const closeDetail = useCallback(() => {
+        setDetailOpen(false);
+    }, []);
 
     const openDetail = (timesheet: any) => {
         setSelectedTimesheet(timesheet);
@@ -206,8 +210,14 @@ const ExtractedTimesheetsPage = () => {
             {selectedTimesheet && (
                 <Modal
                     open={detailOpen}
-                    onClose={() => setDetailOpen(false)}
-                    title={`Timesheet Review: ${selectedTimesheet.client_name}`}
+                    onClose={closeDetail}
+                    size="xxl"
+                    leading={
+                        <button type="button" className="modal__back" onClick={closeDetail}>
+                            Back
+                        </button>
+                    }
+                    title={`Timesheet review: ${selectedTimesheet.client_name}`}
                     actions={
                         <>
                             <Button
@@ -230,14 +240,14 @@ const ExtractedTimesheetsPage = () => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                onClick={() => setDetailOpen(false)}
+                                onClick={closeDetail}
                             >
                                 Close
                             </Button>
                         </>
                     }
                 >
-                    <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
+                    <div style={{ maxHeight: 'min(78vh, 720px)', overflow: 'auto' }}>
                         <div className="detail-section">
                             <h4>Email Details</h4>
                             <div className="detail-row">

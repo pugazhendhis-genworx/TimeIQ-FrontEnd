@@ -18,8 +18,6 @@ const DashboardLayout = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((s) => s.auth);
   const role = user?.role?.toLowerCase() ?? '';
-  const isAdmin = role === 'admin';
-
   /* Fetch shared data on mount */
   useEffect(() => {
     if (role !== 'auditor') {
@@ -27,6 +25,8 @@ const DashboardLayout = () => {
       dispatch(fetchRolesThunk());
       dispatch(fetchClientsThunk());
       dispatch(fetchWhitelistsThunk());
+    } else {
+      dispatch(fetchClientsThunk());
     }
   }, [dispatch, role]);
 
@@ -34,7 +34,7 @@ const DashboardLayout = () => {
     <div className="dashboard-shell">
       <Topbar />
       <div className="dashboard-shell__layout">
-        <Sidebar isAdmin={isAdmin} role={role} />
+        <Sidebar role={role} />
         <main className="dashboard-shell__main">
           <Outlet />
         </main>

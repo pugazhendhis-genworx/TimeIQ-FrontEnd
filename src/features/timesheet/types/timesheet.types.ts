@@ -28,6 +28,10 @@ export interface TimeEntryRaw {
   overtime_hours: string;
   double_time_hours: string;
   paycode_id: string | null;
+  matching_status?: string | null;
+  employee_unmatched_reason?: string | null;
+  client_unmatched_reason?: string | null;
+  match_confidence?: string | null;
 }
 
 /** Enriched entry returned by GET /timesheet/extracted-data/{id} */

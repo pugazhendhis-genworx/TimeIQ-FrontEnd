@@ -61,7 +61,7 @@ const AddClientModal = ({ open, onClose }: AddClientModalProps) => {
           client_name: clientName.trim(),
           client_code: clientCode.trim(),
           client_email: clientEmail.trim(),
-          created_by: user?.user_name || user?.user_id || 'unknown',
+          created_by: user?.user_name || user?.email || 'unknown',
         }),
       ).unwrap();
       toast('Client added successfully');
