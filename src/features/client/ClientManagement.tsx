@@ -1,7 +1,7 @@
 /* ──────────────────────────────────────────────
  *  Client Management page (operation executive)
  * ────────────────────────────────────────────── */
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import {
   fetchClientsThunk,
@@ -11,6 +11,7 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import AddClientModal from './components/AddClientModal';
 import { toast } from '../../utils/toast';
+import Pagination from '../../components/common/Pagination';
 
 const ClientManagement = () => {
   const dispatch = useAppDispatch();
@@ -18,6 +19,7 @@ const ClientManagement = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchClientsThunk());
@@ -41,6 +43,14 @@ const ClientManagement = () => {
     }
     return result;
   }, [clients, search, statusFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   /* ── Toggle status handler ─────────────────── */
   const handleToggleStatus = async (clientId: string, currentlyActive: boolean) => {
@@ -121,7 +131,7 @@ const ClientManagement = () => {
                   </td>
                 </tr>
               ) : (
-                filtered.map((c) => (
+                paginated.map((c) => (
                   <tr key={c.client_id}>
                     <td style={{ fontWeight: 600 }}>{c.client_name}</td>
                     <td>
@@ -160,6 +170,13 @@ const ClientManagement = () => {
           </table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
 
       <AddClientModal
         open={addModalOpen}

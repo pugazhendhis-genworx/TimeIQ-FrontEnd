@@ -55,13 +55,11 @@ const OperationExecutiveOverview = () => {
   }, [dispatch]);
 
   /* ── Computed stats ──────────────────────────── */
-  const totalClients = clients.length;
   const activeClients = clients.filter((c) => c.is_active).length;
   const totalTimesheets = timesheets.length;
   const pendingApproval = timesheets.filter((t) => t.status === 'READY_FOR_APPROVAL').length;
   const approvedTimesheets = timesheets.filter((t) => t.status === 'APPROVED').length;
   const totalEmails = emails.length;
-  const timesheetEmails = emails.filter((e) => e.classification === 'timesheet');
   const totalAssignments = assignments.length;
   const activeAssignments = assignments.filter((a) => a.is_active).length;
 
@@ -83,7 +81,17 @@ const OperationExecutiveOverview = () => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  const topFlagged = [...flaggedList].slice(0, 8);
+  const topFlagged = [...flaggedList]
+    .sort((a, b) => {
+      const da = a.latest_violation_created_at
+        ? new Date(a.latest_violation_created_at).getTime()
+        : 0;
+      const db = b.latest_violation_created_at
+        ? new Date(b.latest_violation_created_at).getTime()
+        : 0;
+      return db - da;
+    })
+    .slice(0, 5);
   const violationsDetail = violationsModalId
     ? detailByTimesheetId[violationsModalId]
     : null;
@@ -106,10 +114,9 @@ const OperationExecutiveOverview = () => {
 
       {/* ── Stats cards ─────────────────────────── */}
       <div className="stats-grid">
-        <StatsCard label="Total Clients" value={totalClients} />
+
         <StatsCard label="Active Clients" value={activeClients} />
         <StatsCard label="Total Emails" value={totalEmails} />
-        <StatsCard label="Timesheet-classified emails" value={timesheetEmails.length} />
         <StatsCard label="Total Timesheets" value={totalTimesheets} />
         <StatsCard label="Pending Approval" value={pendingApproval} />
         <StatsCard label="Approved" value={approvedTimesheets} />
@@ -190,8 +197,8 @@ const OperationExecutiveOverview = () => {
         }
       >
         {violationsModalId &&
-        detailLoadingTimesheetId === violationsModalId &&
-        !violationsDetail ? (
+          detailLoadingTimesheetId === violationsModalId &&
+          !violationsDetail ? (
           <div className="no-data">Loading…</div>
         ) : violationsDetail ? (
           violationsDetail.violations.length === 0 ? (
@@ -208,9 +215,19 @@ const OperationExecutiveOverview = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1.25rem', marginTop: '1.5rem' }}>
 
         {/* Recent Emails */}
-        <div className="table-wrap">
-          <div className="table-toolbar">
+        <div
+          className="table-wrap"
+          style={{ cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/dashboard/emails')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') navigate('/dashboard/emails');
+          }}
+        >
+          <div className="table-toolbar" style={{ justifyContent: 'space-between' }}>
             <strong style={{ fontSize: '0.85rem' }}>Recent Emails</strong>
+            <Button variant="ghost" className="btn--sm" onClick={() => navigate('/dashboard/emails')}>View all →</Button>
           </div>
           <table className="data-table">
             <thead>
@@ -226,7 +243,7 @@ const OperationExecutiveOverview = () => {
                 <tr><td colSpan={4} className="no-data">No emails yet</td></tr>
               ) : (
                 recentEmails.map((e) => (
-                  <tr key={e.email_message_id}>
+                  <tr key={e.email_message_id} style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard/emails')}>
                     <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{fmt(e.received_at)}</td>
                     <td style={{ fontSize: '0.8rem' }}>{e.sender_email}</td>
                     <td style={{ fontSize: '0.8rem', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -286,9 +303,19 @@ const OperationExecutiveOverview = () => {
         </div>
 
         {/* Recent Clients */}
-        <div className="table-wrap">
-          <div className="table-toolbar">
+        <div
+          className="table-wrap"
+          style={{ cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/dashboard/client-config')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') navigate('/dashboard/client-config');
+          }}
+        >
+          <div className="table-toolbar" style={{ justifyContent: 'space-between' }}>
             <strong style={{ fontSize: '0.85rem' }}>Recent Clients</strong>
+            <Button variant="ghost" className="btn--sm" onClick={() => navigate('/dashboard/client-config')}>View all →</Button>
           </div>
           <table className="data-table">
             <thead>
@@ -304,7 +331,7 @@ const OperationExecutiveOverview = () => {
                 <tr><td colSpan={4} className="no-data">No clients yet</td></tr>
               ) : (
                 recentClients.map((c) => (
-                  <tr key={c.client_id}>
+                  <tr key={c.client_id} style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard/client-config')}>
                     <td style={{ fontWeight: 600 }}>{c.client_name}</td>
                     <td>
                       <span className="client-code-cell">{c.client_code}</span>

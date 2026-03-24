@@ -10,10 +10,13 @@ interface SidebarProps {
 interface NavItem {
   label: string;
   path: string;
+  icon?: string;
   /** Match nested routes (e.g. /dashboard/extracted-timesheets/:id) */
   prefixMatch?: boolean;
   /** Roles that can see this item. If omitted → visible to everyone. */
   roles?: string[];
+  /** Optional group separator label rendered above this item */
+  group?: string;
 }
 
 const pathIsActive = (pathname: string, path: string, prefixMatch?: boolean) => {
@@ -29,34 +32,21 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Users', path: '/dashboard/users', roles: ['admin'] },
 
   {
-    label: 'Clients',
-    path: '/dashboard/clients',
+    label: 'Client Config',
+    path: '/dashboard/client-config',
     roles: ['operation_executive'],
+    group: 'Management',
   },
   {
-    label: 'Client rules',
-    path: '/dashboard/client-rules',
-    roles: ['operation_executive'],
-  },
-  {
-    label: 'Holidays',
-    path: '/dashboard/holidays',
-    roles: ['operation_executive'],
-  },
-  {
-    label: 'Whitelist',
-    path: '/dashboard/whitelist',
-    roles: ['operation_executive'],
-  },
-  {
-    label: 'Employees',
-    path: '/dashboard/employees',
+    label: 'Workforce',
+    path: '/dashboard/workforce',
     roles: ['operation_executive'],
   },
   {
     label: 'Emails',
     path: '/dashboard/emails',
     roles: ['operation_executive'],
+    group: 'Processing',
   },
   {
     label: 'Timesheets',
@@ -64,44 +54,41 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['operation_executive'],
   },
   {
-    label: 'Rule violations',
+    label: 'Rule Violations',
     path: '/dashboard/rule-violations',
     roles: ['operation_executive', 'auditor'],
+    group: 'Compliance',
   },
   {
-    label: 'Assignments',
-    path: '/dashboard/assignments',
-    roles: ['operation_executive'],
-  },
-  {
-    label: 'Payroll',
+    label: 'Payroll Codes',
     path: '/dashboard/payroll',
     roles: ['operation_executive'],
   },
 
   {
-    label: 'Timesheets review',
+    label: 'Timesheets Review',
     path: '/dashboard/audit-timesheets',
     roles: ['auditor'],
+    group: 'Audit',
   },
   {
-    label: 'Payroll ready',
+    label: 'Payroll Ready',
     path: '/dashboard/payroll-ready',
     roles: ['auditor'],
   },
   {
-    label: 'Audit logs',
+    label: 'Audit Logs',
     path: '/dashboard/audit-logs',
     roles: ['auditor'],
   },
   {
-    label: 'Extracted data',
+    label: 'Extracted Data',
     path: '/dashboard/extracted-timesheets',
     prefixMatch: true,
     roles: ['auditor'],
   },
 
-  { label: 'Profile', path: '/dashboard/profile' },
+  { label: 'Profile', path: '/dashboard/profile', group: 'Account' },
 ];
 
 const Sidebar = ({ role }: SidebarProps) => {
@@ -112,22 +99,34 @@ const Sidebar = ({ role }: SidebarProps) => {
     (n) => !n.roles || n.roles.includes(role),
   );
 
+  let lastGroup: string | undefined;
+
   return (
     <nav className="sidebar">
-      {items.map((item) => (
-        <button
-          key={`${item.path}-${item.label}`}
-          type="button"
-          className={`sidebar__link${
-            pathIsActive(location.pathname, item.path, item.prefixMatch)
-              ? ' sidebar__link--active'
-              : ''
-          }`}
-          onClick={() => navigate(item.path)}
-        >
-          {item.label}
-        </button>
-      ))}
+      {items.map((item) => {
+        const showGroup = item.group && item.group !== lastGroup;
+        if (item.group) lastGroup = item.group;
+
+        return (
+          <div key={`${item.path}-${item.label}`}>
+            {showGroup && (
+              <div className="sidebar__group">{item.group}</div>
+            )}
+            <button
+              type="button"
+              className={`sidebar__link${
+                pathIsActive(location.pathname, item.path, item.prefixMatch)
+                  ? ' sidebar__link--active'
+                  : ''
+              }`}
+              onClick={() => navigate(item.path)}
+            >
+              {item.icon && <span className="sidebar__icon">{item.icon}</span>}
+              {item.label}
+            </button>
+          </div>
+        );
+      })}
     </nav>
   );
 };

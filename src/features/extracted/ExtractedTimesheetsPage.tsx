@@ -13,6 +13,7 @@ import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import { toast } from '../../utils/toast';
 import config from '../../config/apiConfig';
+import Pagination from '../../components/common/Pagination';
 
 const statusLabelMap: Record<string, string> = {
     RECEIVED: 'Received',
@@ -30,6 +31,7 @@ const ExtractedTimesheetsPage = () => {
     const { emails } = useAppSelector((s) => s.email);
     const [search, setSearch] = useState('');
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+    const [page, setPage] = useState(1);
     const [selectedTimesheet, setSelectedTimesheet] = useState<any>(null);
     const [detailOpen, setDetailOpen] = useState(false);
 
@@ -61,6 +63,14 @@ const ExtractedTimesheetsPage = () => {
             return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
         });
     }, [extractedData, search, sortOrder]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, sortOrder]);
+
+    const pageSize = 10;
+    const totalItems = filtered.length;
+    const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
     const closeDetail = useCallback(() => {
         setDetailOpen(false);
@@ -158,7 +168,7 @@ const ExtractedTimesheetsPage = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                filtered.map((t) => (
+                                paginated.map((t) => (
                                     <tr key={t.timesheet_id}>
                                         <td>{new Date(t.received_at).toLocaleString()}</td>
                                         <td>{t.sender_email}</td>
@@ -206,6 +216,13 @@ const ExtractedTimesheetsPage = () => {
                     </table>
                 )}
             </div>
+
+            <Pagination
+                page={page}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setPage}
+            />
 
             {selectedTimesheet && (
                 <Modal

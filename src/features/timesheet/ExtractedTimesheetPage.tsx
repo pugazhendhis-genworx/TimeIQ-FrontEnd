@@ -2,11 +2,13 @@
  *  Extracted Timesheet detail – Auditor/Executive
  *  Uses /extracted-data/{id} for enriched display
  * ────────────────────────────────────────────── */
-import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetThunk } from './timesheetSlice';
 import Badge from '../../components/common/Badge';
+import Button from '../../components/common/Button';
+import Pagination from '../../components/common/Pagination';
 
 const statusLabelMap: Record<string, string> = {
   RECEIVED: 'Received',
@@ -33,8 +35,15 @@ const fmtDate = (iso: string | null) =>
 
 const ExtractedTimesheetPage = () => {
   const { timesheetId } = useParams<{ timesheetId: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { extractedById, extractedLoading } = useAppSelector((s) => s.timesheet);
+
+  const fromRuleViolations = searchParams.get('from') === 'rule-violations';
+  const ruleViolationsBackUrl = timesheetId
+    ? `/dashboard/rule-violations?timesheetId=${encodeURIComponent(timesheetId)}`
+    : '/dashboard/rule-violations';
 
   useEffect(() => {
     if (timesheetId) {
@@ -43,6 +52,22 @@ const ExtractedTimesheetPage = () => {
   }, [dispatch, timesheetId]);
 
   const detail = timesheetId ? extractedById[timesheetId] ?? null : null;
+
+  const [entryPage, setEntryPage] = useState(1);
+  const pageSize = 10;
+  const totalItems = detail?.entries.length ?? 0;
+
+  useEffect(() => {
+    setEntryPage(1);
+  }, [timesheetId, totalItems]);
+
+  const paginatedEntries = useMemo(() => {
+    if (!detail) return [];
+    return detail.entries.slice(
+      (entryPage - 1) * pageSize,
+      entryPage * pageSize,
+    );
+  }, [detail, entryPage]);
 
   if (extractedLoading) {
     return (
@@ -71,7 +96,18 @@ const ExtractedTimesheetPage = () => {
   return (
     <div>
       <div className="page-header">
-        <h3 className="page-header__title">Extracted Timesheet</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {fromRuleViolations && (
+            <Button
+              variant="ghost"
+              className="btn--sm"
+              onClick={() => navigate(ruleViolationsBackUrl)}
+            >
+              Back
+            </Button>
+          )}
+          <h3 className="page-header__title">Extracted Timesheet</h3>
+        </div>
       </div>
 
       <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>
@@ -137,7 +173,8 @@ const ExtractedTimesheetPage = () => {
             No time entries found for this timesheet.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <>
+            <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
                 <tr>
@@ -153,7 +190,7 @@ const ExtractedTimesheetPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {detail.entries.map((entry, idx) => {
+                {paginatedEntries.map((entry, idx) => {
                   const meta = matchingMeta[entry.matching_status] ??
                     { label: entry.matching_status, variant: 'info' };
                   const reason =
@@ -163,7 +200,7 @@ const ExtractedTimesheetPage = () => {
                   return (
                     <tr key={entry.timeentry_id}>
                       <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
-                        {idx + 1}
+                        {(entryPage - 1) * pageSize + idx + 1}
                       </td>
                       <td>
                         {entry.employee_name ?? (
@@ -199,6 +236,14 @@ const ExtractedTimesheetPage = () => {
               </tbody>
             </table>
           </div>
+
+          <Pagination
+            page={entryPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setEntryPage}
+          />
+          </>
         )}
       </div>
     </div>

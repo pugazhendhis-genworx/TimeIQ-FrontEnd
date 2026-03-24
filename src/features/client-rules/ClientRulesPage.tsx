@@ -15,6 +15,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import { toast } from '../../utils/toast';
+import Pagination from '../../components/common/Pagination';
 
 const defaultConfig = (): RuleConfig => ({
   ot_threshold: 8,
@@ -39,6 +40,7 @@ const ClientRulesPage = () => {
     'all',
   );
   const [sortBy, setSortBy] = useState<'created' | 'type'>('created');
+  const [page, setPage] = useState(1);
 
   const [addOpen, setAddOpen] = useState(false);
   const [editRule, setEditRule] = useState<ClientRule | null>(null);
@@ -79,6 +81,10 @@ const ClientRulesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when filter changes
   }, [clientId, statusFilter]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [clientId, statusFilter, sortBy]);
+
   const sortedRules = useMemo(() => {
     const copy = [...rules];
     copy.sort((a, b) => {
@@ -91,6 +97,13 @@ const ClientRulesPage = () => {
     });
     return copy;
   }, [rules, sortBy]);
+
+  const pageSize = 10;
+  const totalItems = sortedRules.length;
+  const paginated = sortedRules.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
 
   const selectedClient = clients.find((c) => c.client_id === clientId);
 
@@ -259,7 +272,7 @@ const ClientRulesPage = () => {
                         </td>
                       </tr>
                     ) : (
-                      sortedRules.map((r) => (
+                      paginated.map((r) => (
                         <tr key={r.rule_id}>
                           <td>
                             <span className="client-code-cell">{r.rule_type}</span>
@@ -313,6 +326,13 @@ const ClientRulesPage = () => {
           </>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
 
       <Modal
         open={addOpen}

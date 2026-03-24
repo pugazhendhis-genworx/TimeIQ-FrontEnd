@@ -14,6 +14,7 @@ import type { ExtractedTimesheetDisplay } from '../timesheet/types/timesheet.typ
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Badge from '../../components/common/Badge';
+import Pagination from '../../components/common/Pagination';
 
 const fmtDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString() : '—';
@@ -39,6 +40,7 @@ const PayrollReadyPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<'week' | 'entries'>('week');
+  const [page, setPage] = useState(1);
 
   const [viewId, setViewId] = useState<string | null>(null);
   const [summary, setSummary] = useState<PayrollTimesheetSummary | null>(null);
@@ -117,6 +119,14 @@ const PayrollReadyPage = () => {
     return rows;
   }, [grouped, search, sortKey]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortKey]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginatedRows = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   const openView = async (timesheetId: string) => {
     setViewId(timesheetId);
     setSummary(null);
@@ -192,7 +202,7 @@ const PayrollReadyPage = () => {
                   </td>
                 </tr>
               ) : (
-                filtered.map((row) => (
+                paginatedRows.map((row) => (
                   <tr key={row.timesheet_id}>
                     <td>{fmtDate(row.week)}</td>
                     <td>{clientName(row.clientId)}</td>
@@ -227,6 +237,13 @@ const PayrollReadyPage = () => {
         )}
       </div>
 
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
+
       <Modal
         open={!!viewId}
         onClose={() => {
@@ -259,16 +276,21 @@ const PayrollReadyPage = () => {
                 </p>
               </div>
             )}
+            {summary.payroll_entries[0]?.week_ending && (
+              <div className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>
+                Week ending: {fmtDate(summary.payroll_entries[0].week_ending)}
+              </div>
+            )}
             <div style={{ overflowX: 'auto' }}>
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Line</th>
                     <th>Reg h</th>
                     <th>OT h</th>
                     <th>DT h</th>
                     <th>Reg rate</th>
                     <th>OT rate</th>
+                    <th>DT rate</th>
                     <th>Reg pay</th>
                     <th>OT pay</th>
                     <th>Holiday pay</th>
@@ -282,9 +304,8 @@ const PayrollReadyPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    summary.payroll_entries.map((e, idx) => (
+                    summary.payroll_entries.map((e) => (
                       <tr key={e.payroll_entry_id}>
-                        <td>{idx + 1}</td>
                         <td style={{ textAlign: 'right' }}>
                           {e.regular_hours.toFixed(2)}
                         </td>
@@ -296,6 +317,7 @@ const PayrollReadyPage = () => {
                         </td>
                         <td style={{ textAlign: 'right' }}>{e.regular_rate}</td>
                         <td style={{ textAlign: 'right' }}>{e.overtime_rate}</td>
+                        <td style={{ textAlign: 'right' }}>{e.double_time_rate}</td>
                         <td style={{ textAlign: 'right' }}>{e.reg_pay}</td>
                         <td style={{ textAlign: 'right' }}>{e.ot_pay}</td>
                         <td style={{ textAlign: 'right' }}>{e.holiday_pay}</td>

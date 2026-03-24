@@ -116,8 +116,6 @@ const AuditorDashboard = () => {
 
   const reviewPreview = [...openReviews].slice(0, 6);
 
-  const violationPreview = [...flaggedList].slice(0, 6);
-
   return (
     <div>
       <div className="page-header page-header--feature">
@@ -185,38 +183,9 @@ const AuditorDashboard = () => {
           </div>
         </div>
 
-        <div className="insight-card insight-card--wide">
-          <h4 className="insight-card__title">Recent timesheet activity (by day)</h4>
-          <div style={{ width: '100%', height: 260 }}>
-            <ResponsiveContainer>
-              <AreaChart data={trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="audFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0052cc" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#0052cc" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-                <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#0052cc"
-                  fill="url(#audFill)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-tables-grid">
-        <div className="table-wrap">
-          <div className="table-toolbar" style={{ justifyContent: 'space-between' }}>
-            <strong className="section-title-inline">Needs review</strong>
+        <div className="insight-card">
+          <div className="table-toolbar" style={{ justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <h4 className="insight-card__title" style={{ marginBottom: 0 }}>Needs review</h4>
             <Button variant="ghost" className="btn--sm" onClick={() => navigate('/dashboard/audit-timesheets')}>
               Open all
             </Button>
@@ -257,45 +226,31 @@ const AuditorDashboard = () => {
           </table>
         </div>
 
-        <div className="table-wrap">
-          <div className="table-toolbar" style={{ justifyContent: 'space-between' }}>
-            <strong className="section-title-inline">Rule violations</strong>
-            <Button variant="ghost" className="btn--sm" onClick={() => navigate('/dashboard/rule-violations')}>
-              Open queue
-            </Button>
+        <div className="insight-card insight-card--span-2">
+          <h4 className="insight-card__title">Recent timesheet activity (by day)</h4>
+          <div style={{ width: '100%', height: 260 }}>
+            <ResponsiveContainer>
+              <AreaChart data={trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="audFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0052cc" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#0052cc" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#0052cc"
+                  fill="url(#audFill)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Sender</th>
-                <th>Week</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {violationPreview.length === 0 ? (
-                <tr><td colSpan={3} className="no-data">No violations flagged</td></tr>
-              ) : (
-                violationPreview.map((v) => (
-                  <tr key={v.timesheet_id}>
-                    <td style={{ fontSize: '0.82rem' }}>{v.email}</td>
-                    <td style={{ fontSize: '0.82rem' }}>
-                      {v.week_ending ? new Date(v.week_ending).toLocaleDateString() : '—'}
-                    </td>
-                    <td>
-                      <Button
-                        variant="ghost"
-                        className="btn--sm"
-                        onClick={() => navigate('/dashboard/rule-violations')}
-                      >
-                        Review
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
         </div>
       </div>
 

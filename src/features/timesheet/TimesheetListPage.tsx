@@ -2,6 +2,7 @@
  *  Timesheet list – Operation Executive
  * ────────────────────────────────────────────── */
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import {
   fetchTimesheetsThunk,
@@ -18,6 +19,7 @@ import { fetchEmailsThunk } from '../email/emailSlice';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
 import config from '../../config/apiConfig';
 
 const statusLabelMap: Record<string, string> = {
@@ -48,6 +50,7 @@ type SortOrder = 'desc' | 'asc';
 
 const TimesheetListPage = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const {
     timesheets,
     timesheetsLoading,
@@ -68,6 +71,7 @@ const TimesheetListPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<Record<string, string>>({});
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [page, setPage] = useState(1);
 
   /* ── Email detail modal state ────────────────── */
   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -120,6 +124,14 @@ const TimesheetListPage = () => {
     });
     return sorted;
   }, [timesheets, statusFilter, clientFilter, search, clients, employees, entriesByTimesheetId, sortOrder]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, clientFilter, search, sortOrder]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value);
@@ -213,7 +225,7 @@ const TimesheetListPage = () => {
             onClick={() => setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
             title="Toggle sort order"
           >
-            {sortOrder === 'desc' ? '↓ Newest' : '↑ Oldest'}
+            {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
           </Button>
         </div>
 
@@ -240,7 +252,7 @@ const TimesheetListPage = () => {
                   <td colSpan={9} className="no-data">No timesheets match your filters</td>
                 </tr>
               ) : (
-                filtered.map((t) => {
+                paginated.map((t) => {
                   const clientName =
                     clients.find((c) => c.client_id === t.client_id)?.client_name ?? '—';
                   const statusVariant =
@@ -277,7 +289,19 @@ const TimesheetListPage = () => {
                       <td>{fmtDate(t.week_ending)}</td>
                       <td>
                         {flaggedIds.has(t.timesheet_id) ? (
-                          <Badge variant="assignment_violation">rule_violated</Badge>
+                          <Badge
+                            variant="assignment_violation"
+                            style={{ cursor: 'pointer' }}
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/rule-violations?timesheetId=${encodeURIComponent(
+                                t.timesheet_id,
+                              )}`,
+                            )
+                          }
+                          >
+                            rule_violated
+                          </Badge>
                         ) : (
                           <Badge variant="matched">rule_not_violated</Badge>
                         )}
@@ -336,6 +360,13 @@ const TimesheetListPage = () => {
           </table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
 
       {/* ── Timesheet Detail modal ───────────────── */}
       <Modal

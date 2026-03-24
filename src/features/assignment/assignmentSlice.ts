@@ -36,9 +36,10 @@ export const createAssignmentThunk = createAsyncThunk(
             client_id: string;
             start_date: string;
             end_date: string;
-            regular_rate: number;
-            overtime_rate: number;
-            double_time_rate: number;
+            regular_rate?: number;
+            overtime_rate?: number;
+            double_time_rate?: number;
+            paycode_id?: string | null;
         },
         { rejectWithValue },
     ) => {

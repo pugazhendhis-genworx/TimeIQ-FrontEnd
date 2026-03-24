@@ -25,6 +25,8 @@ export const fetchTimesheetEmailsApi = async (): Promise<EmailMessage[]> => {
 export const processAllEmailsApi = async (): Promise<unknown> => {
   const { data } = await servicesApi.post(
     `${EMAIL_PROCESSING_PREFIX}/process-all`,
+    {},
+    { timeout: 180_000 },
   );
   return data;
 };
@@ -32,6 +34,8 @@ export const processAllEmailsApi = async (): Promise<unknown> => {
 export const reprocessFailedEmailsApi = async (): Promise<unknown> => {
   const { data } = await servicesApi.post(
     `${EMAIL_PROCESSING_PREFIX}/reprocess-failed`,
+    {},
+    { timeout: 180_000 },
   );
   return data;
 };

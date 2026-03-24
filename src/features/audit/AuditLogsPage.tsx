@@ -1,25 +1,39 @@
 /* ──────────────────────────────────────────────
  *  Audit Logs – chronological actions view
  * ────────────────────────────────────────────── */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchAuditLogsThunk } from './auditSlice';
 import { formatAuditLogDescription } from '../../utils/auditLogDescription';
+import Pagination from '../../components/common/Pagination';
 
 const AuditLogsPage = () => {
   const dispatch = useAppDispatch();
   const { logs, logsLoading } = useAppSelector((s) => s.audit);
   const [resourceFilter, setResourceFilter] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchAuditLogsThunk(undefined));
   }, [dispatch]);
 
-  const filtered = logs.filter((log) =>
-    resourceFilter
-      ? log.entity_type.toLowerCase() === resourceFilter.toLowerCase()
-      : true,
+  const filtered = useMemo(
+    () =>
+      logs.filter((log) =>
+        resourceFilter
+          ? log.entity_type.toLowerCase() === resourceFilter.toLowerCase()
+          : true,
+      ),
+    [logs, resourceFilter],
   );
+
+  useEffect(() => {
+    setPage(1);
+  }, [resourceFilter, logs.length]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div>
@@ -63,7 +77,7 @@ const AuditLogsPage = () => {
                   </td>
                 </tr>
               ) : (
-                filtered.map((l) => (
+                paginated.map((l) => (
                   <tr key={l.audit_log_id}>
                     <td>{new Date(l.created_at).toLocaleString()}</td>
                     <td>{l.entity_type}</td>
@@ -93,6 +107,13 @@ const AuditLogsPage = () => {
           </table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </div>
   );
 };

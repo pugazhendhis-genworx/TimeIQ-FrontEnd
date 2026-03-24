@@ -16,6 +16,8 @@ export interface FlaggedTimesheetSummary {
   status: string;
   email: string;
   source: string | null;
+  latest_violation_created_at: string | null;
+  email_received_at: string | null;
 }
 
 export interface RuleViolationDetail {

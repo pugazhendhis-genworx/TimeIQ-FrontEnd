@@ -3,7 +3,7 @@
  *  Flagged timesheets, violation detail, source mail
  * ────────────────────────────────────────────── */
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import {
   fetchFlaggedTimesheetsThunk,
@@ -15,6 +15,7 @@ import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import config from '../../config/apiConfig';
 import ViolationSeverityList from './components/ViolationSeverityList';
+import Pagination from '../../components/common/Pagination';
 
 const fmt = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—';
@@ -25,6 +26,7 @@ const fmtDate = (iso: string | null) =>
 const RuleViolationsPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAppSelector((s) => s.auth);
   const role = user?.role?.toLowerCase() ?? '';
   const isAuditor = role === 'auditor';
@@ -38,7 +40,7 @@ const RuleViolationsPage = () => {
   const { emails } = useAppSelector((s) => s.email);
 
   const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<'week' | 'email'>('week');
+  const [sortKey, setSortKey] = useState<'week' | 'email' | 'email_received'>('email_received');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const [violationsModalId, setViolationsModalId] = useState<string | null>(null);
@@ -49,10 +51,30 @@ const RuleViolationsPage = () => {
     null,
   );
 
+  const timesheetIdQuery = searchParams.get('timesheetId');
+  const [page, setPage] = useState(1);
+
   useEffect(() => {
     dispatch(fetchFlaggedTimesheetsThunk());
     dispatch(fetchEmailsThunk());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!timesheetIdQuery) return;
+    setViolationsModalId(timesheetIdQuery);
+    if (!detailByTimesheetId[timesheetIdQuery]) {
+      dispatch(fetchViolationDetailThunk(timesheetIdQuery));
+    }
+  }, [timesheetIdQuery, detailByTimesheetId, dispatch]);
+
+  const closeViolationsModal = () => {
+    setViolationsModalId(null);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('timesheetId');
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!pendingMailTimesheetId) return;
@@ -112,11 +134,32 @@ const RuleViolationsPage = () => {
       if (sortKey === 'email') {
         return mul * a.email.localeCompare(b.email);
       }
+      if (sortKey === 'email_received') {
+        const da = a.email_received_at
+          ? new Date(a.email_received_at).getTime()
+          : 0;
+        const db = b.email_received_at
+          ? new Date(b.email_received_at).getTime()
+          : 0;
+        return mul * (da - db);
+      }
+
       const da = a.week_ending ? new Date(a.week_ending).getTime() : 0;
       const db = b.week_ending ? new Date(b.week_ending).getTime() : 0;
       return mul * (da - db);
     });
   }, [flaggedList, search, sortKey, sortDir]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortKey, sortDir, flaggedList.length]);
+
+  const pageSize = 10;
+  const totalItems = filteredSorted.length;
+  const paginatedRows = filteredSorted.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
 
   const violationsDetail = violationsModalId
     ? detailByTimesheetId[violationsModalId]
@@ -157,8 +200,11 @@ const RuleViolationsPage = () => {
           <select
             className="table-toolbar__select"
             value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as 'week' | 'email')}
+            onChange={(e) =>
+              setSortKey(e.target.value as 'week' | 'email' | 'email_received')
+            }
           >
+            <option value="email_received">Sort: email received time</option>
             <option value="week">Sort: week ending</option>
             <option value="email">Sort: sender email</option>
           </select>
@@ -167,7 +213,7 @@ const RuleViolationsPage = () => {
             className="btn--sm"
             onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}
           >
-            {sortDir === 'desc' ? '↓ Desc' : '↑ Asc'}
+            {sortDir === 'desc' ? 'Newest first' : 'Oldest first'}
           </Button>
         </div>
 
@@ -197,7 +243,7 @@ const RuleViolationsPage = () => {
                   </td>
                 </tr>
               ) : (
-                filteredSorted.map((row) => (
+                paginatedRows.map((row) => (
                   <tr key={row.timesheet_id}>
                     <td>{fmtDate(row.week_ending)}</td>
                     <td style={{ fontSize: '0.85rem' }}>{row.email}</td>
@@ -237,7 +283,7 @@ const RuleViolationsPage = () => {
                             className="btn--sm"
                             onClick={() =>
                               navigate(
-                                `/dashboard/extracted-timesheets/${row.timesheet_id}`,
+                                `/dashboard/extracted-timesheets/${row.timesheet_id}?from=rule-violations`,
                               )
                             }
                           >
@@ -254,13 +300,20 @@ const RuleViolationsPage = () => {
         )}
       </div>
 
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
+
       <Modal
         open={!!violationsModalId}
-        onClose={() => setViolationsModalId(null)}
+        onClose={closeViolationsModal}
         title="Violations by severity"
         size="lg"
         actions={
-          <Button variant="ghost" onClick={() => setViolationsModalId(null)}>
+          <Button variant="ghost" onClick={closeViolationsModal}>
             Close
           </Button>
         }

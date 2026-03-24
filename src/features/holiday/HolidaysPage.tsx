@@ -13,6 +13,7 @@ import type { Holiday } from './types/holiday.types';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { toast } from '../../utils/toast';
+import Pagination from '../../components/common/Pagination';
 
 const HolidaysPage = () => {
   const dispatch = useAppDispatch();
@@ -24,6 +25,7 @@ const HolidaysPage = () => {
   const [name, setName] = useState('');
   const [holidayDate, setHolidayDate] = useState('');
   const [sortAsc, setSortAsc] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchClientsThunk());
@@ -50,6 +52,10 @@ const HolidaysPage = () => {
     void loadHolidays(clientId);
   }, [clientId]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [clientId, sortAsc]);
+
   const sorted = useMemo(() => {
     const copy = [...holidays];
     copy.sort((a, b) => {
@@ -59,6 +65,10 @@ const HolidaysPage = () => {
     });
     return copy;
   }, [holidays, sortAsc]);
+
+  const pageSize = 10;
+  const totalItems = sorted.length;
+  const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   const selectedClient = clients.find((c) => c.client_id === clientId);
 
@@ -183,7 +193,7 @@ const HolidaysPage = () => {
                         </td>
                       </tr>
                     ) : (
-                      sorted.map((h) => (
+                      paginated.map((h) => (
                         <tr key={h.id}>
                           <td>
                             {new Date(h.holiday_date).toLocaleDateString()}
@@ -217,6 +227,13 @@ const HolidaysPage = () => {
           </p>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </>
   );
 };
