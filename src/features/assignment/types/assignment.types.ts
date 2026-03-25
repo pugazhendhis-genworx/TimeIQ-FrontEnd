@@ -8,9 +8,9 @@ export interface Assignment {
     client_id: string;
     start_date: string;
     end_date: string;
-    regular_rate: string;
-    overtime_rate: string;
-    double_time_rate: string;
+    regular_rate: string | null;
+    overtime_rate: string | null;
+    double_time_rate: string | null;
     paycode_id: string | null;
     is_active: boolean;
 }

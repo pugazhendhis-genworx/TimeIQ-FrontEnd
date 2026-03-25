@@ -1,7 +1,7 @@
 /* ──────────────────────────────────────────────
  *  User Management page (admin only)
  * ────────────────────────────────────────────── */
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchUserByIdThunk } from './dashboardSlice';
 import Badge from '../../components/common/Badge';
@@ -9,6 +9,7 @@ import Button from '../../components/common/Button';
 import AddUserModal from './components/AddUserModal';
 import ViewUserModal from './components/ViewUserModal';
 import { toast } from '../../utils/toast';
+import Pagination from '../../components/common/Pagination';
 
 const UserManagement = () => {
   const dispatch = useAppDispatch();
@@ -18,6 +19,7 @@ const UserManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     let result = users;
@@ -33,6 +35,14 @@ const UserManagement = () => {
     if (statusFilter) result = result.filter((u) => u.status === statusFilter);
     return result;
   }, [users, search, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, roleFilter, statusFilter]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleViewUser = async (userId: string) => {
     try {
@@ -87,7 +97,6 @@ const UserManagement = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>User ID</th>
               <th>Name</th>
               <th>Email</th>
               <th>Contact</th>
@@ -99,21 +108,13 @@ const UserManagement = () => {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">
+                <td colSpan={6} className="no-data">
                   No users match your filters
                 </td>
               </tr>
             ) : (
-              filtered.map((u) => (
+              paginated.map((u) => (
                 <tr key={u.user_id}>
-                  <td
-                    style={{
-                      fontSize: '0.78rem',
-                      color: 'var(--color-text-muted)',
-                    }}
-                  >
-                    {u.user_id}
-                  </td>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
                   <td>{u.contact_no || '—'}</td>
@@ -137,6 +138,13 @@ const UserManagement = () => {
             )}
           </tbody>
         </table>
+
+        <Pagination
+          page={page}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
 
       <AddUserModal

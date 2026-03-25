@@ -4,98 +4,91 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
-  isAdmin: boolean;
   role: string;
 }
 
 interface NavItem {
   label: string;
-  icon: string;
   path: string;
+  icon?: string;
+  /** Match nested routes (e.g. /dashboard/extracted-timesheets/:id) */
+  prefixMatch?: boolean;
   /** Roles that can see this item. If omitted → visible to everyone. */
   roles?: string[];
+  /** Optional group separator label rendered above this item */
+  group?: string;
 }
 
+const pathIsActive = (pathname: string, path: string, prefixMatch?: boolean) => {
+  if (path === '/dashboard' && pathname === '/dashboard') return true;
+  if (path === '/dashboard') return false;
+  if (prefixMatch) return pathname === path || pathname.startsWith(`${path}/`);
+  return pathname === path;
+};
+
 const NAV_ITEMS: NavItem[] = [
-  // Common
-  { label: 'Dashboard', icon: '', path: '/dashboard' },
+  { label: 'Dashboard', path: '/dashboard' },
 
-  // Admin-only
-  { label: 'Users', icon: '', path: '/dashboard/users', roles: ['admin'] },
-  // Note: admin no longer sees clients, whitelist, or other ops/auditor menus.
+  { label: 'Users', path: '/dashboard/users', roles: ['admin'] },
 
-  // Operation Executive menus
   {
-    label: 'Clients',
-    icon: '',
-    path: '/dashboard/clients',
+    label: 'Client Config',
+    path: '/dashboard/client-config',
     roles: ['operation_executive'],
+    group: 'Management',
   },
   {
-    label: 'Whitelist',
-    icon: '',
-    path: '/dashboard/whitelist',
-    roles: ['operation_executive'],
-  },
-  {
-    label: 'Employees',
-    icon: '',
-    path: '/dashboard/employees',
+    label: 'Workforce',
+    path: '/dashboard/workforce',
     roles: ['operation_executive'],
   },
   {
     label: 'Emails',
-    icon: '',
     path: '/dashboard/emails',
     roles: ['operation_executive'],
+    group: 'Processing',
   },
   {
     label: 'Timesheets',
-    icon: '',
     path: '/dashboard/timesheets',
     roles: ['operation_executive'],
   },
   {
-    label: 'Timesheet Emails',
-    icon: '',
-    path: '/dashboard/timesheet-emails',
-    roles: ['operation_executive'],
+    label: 'Rule Violations',
+    path: '/dashboard/rule-violations',
+    roles: ['operation_executive', 'auditor'],
+    group: 'Compliance',
   },
   {
-    label: 'Assignments',
-    icon: '',
-    path: '/dashboard/assignments',
-    roles: ['operation_executive'],
-  },
-  {
-    label: 'Payroll',
-    icon: '',
+    label: 'Payroll Codes',
     path: '/dashboard/payroll',
     roles: ['operation_executive'],
   },
 
-  // Auditor menus
   {
     label: 'Timesheets Review',
-    icon: '',
     path: '/dashboard/audit-timesheets',
+    roles: ['auditor'],
+    group: 'Audit',
+  },
+  {
+    label: 'Payroll Ready',
+    path: '/dashboard/payroll-ready',
     roles: ['auditor'],
   },
   {
-    label: 'View Logs',
-    icon: '',
+    label: 'Audit Logs',
     path: '/dashboard/audit-logs',
     roles: ['auditor'],
   },
   {
     label: 'Extracted Data',
-    icon: '',
     path: '/dashboard/extracted-timesheets',
+    prefixMatch: true,
     roles: ['auditor'],
   },
 
-  // Common
-  { label: 'Profile', icon: '', path: '/dashboard/profile' },
+  { label: 'Profile', path: '/dashboard/profile', group: 'Account' },
 ];
 
 const Sidebar = ({ role }: SidebarProps) => {
@@ -106,18 +99,34 @@ const Sidebar = ({ role }: SidebarProps) => {
     (n) => !n.roles || n.roles.includes(role),
   );
 
+  let lastGroup: string | undefined;
+
   return (
     <nav className="sidebar">
-      {items.map((item) => (
-        <button
-          key={item.path}
-          className={`sidebar__link${location.pathname === item.path ? ' sidebar__link--active' : ''}`}
-          onClick={() => navigate(item.path)}
-        >
-          <span className="sidebar__icon">{item.icon}</span>
-          {item.label}
-        </button>
-      ))}
+      {items.map((item) => {
+        const showGroup = item.group && item.group !== lastGroup;
+        if (item.group) lastGroup = item.group;
+
+        return (
+          <div key={`${item.path}-${item.label}`}>
+            {showGroup && (
+              <div className="sidebar__group">{item.group}</div>
+            )}
+            <button
+              type="button"
+              className={`sidebar__link${
+                pathIsActive(location.pathname, item.path, item.prefixMatch)
+                  ? ' sidebar__link--active'
+                  : ''
+              }`}
+              onClick={() => navigate(item.path)}
+            >
+              {item.icon && <span className="sidebar__icon">{item.icon}</span>}
+              {item.label}
+            </button>
+          </div>
+        );
+      })}
     </nav>
   );
 };

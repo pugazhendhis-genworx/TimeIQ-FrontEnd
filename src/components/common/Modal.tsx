@@ -6,20 +6,31 @@ import { useEffect, useCallback, type ReactNode } from 'react';
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   actions?: ReactNode;
-  /** 'md' (default 480px) | 'lg' (720px) | 'xl' (960px) */
-  size?: 'md' | 'lg' | 'xl';
+  /** Optional control shown before the title (e.g. Back). */
+  leading?: ReactNode;
+  /** 'md' (default 480px) | 'lg' (720px) | 'xl' (1040px) | 'xxl' (near full viewport) */
+  size?: 'md' | 'lg' | 'xl' | 'xxl';
 }
 
 const sizeClass: Record<string, string> = {
   md: '',
   lg: 'modal--lg',
   xl: 'modal--xl',
+  xxl: 'modal--xxl',
 };
 
-const Modal = ({ open, onClose, title, children, actions, size = 'md' }: ModalProps) => {
+const Modal = ({
+  open,
+  onClose,
+  title,
+  children,
+  actions,
+  leading,
+  size = 'md',
+}: ModalProps) => {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -43,7 +54,10 @@ const Modal = ({ open, onClose, title, children, actions, size = 'md' }: ModalPr
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className={`modal ${sizeClass[size]}`} onClick={(e) => e.stopPropagation()}>
-        <h3 className="modal__title">{title}</h3>
+        <div className="modal__header">
+          {leading ? <div className="modal__leading">{leading}</div> : null}
+          <h3 className="modal__title">{title}</h3>
+        </div>
         {children}
         {actions && <div className="modal__actions">{actions}</div>}
       </div>

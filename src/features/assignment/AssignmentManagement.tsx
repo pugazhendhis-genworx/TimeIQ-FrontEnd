@@ -11,12 +11,12 @@ import {
 } from './assignmentSlice';
 import { fetchEmployeesThunk } from '../employee/employeeSlice';
 import { fetchClientsThunk } from '../client/clientSlice';
-import { fetchPaycodesThunk } from '../paycode/paycodeSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { toast } from '../../utils/toast';
 import type { Assignment } from './types/assignment.types';
+import Pagination from '../../components/common/Pagination';
 
 const AssignmentManagement = () => {
     const dispatch = useAppDispatch();
@@ -25,8 +25,8 @@ const AssignmentManagement = () => {
     );
     const { employees } = useAppSelector((s) => s.employee);
     const { clients } = useAppSelector((s) => s.client);
-    const { paycodes } = useAppSelector((s) => s.paycode);
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
 
     /* ── Add modal state ───────────────────────── */
     const [addOpen, setAddOpen] = useState(false);
@@ -35,19 +35,12 @@ const AssignmentManagement = () => {
     const [employeeSearch, setEmployeeSearch] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [regularRate, setRegularRate] = useState('');
-    const [overtimeRate, setOvertimeRate] = useState('');
-    const [doubleTimeRate, setDoubleTimeRate] = useState('');
 
     /* ── Edit modal state ──────────────────────── */
     const [editOpen, setEditOpen] = useState(false);
     const [editTarget, setEditTarget] = useState<Assignment | null>(null);
     const [editStartDate, setEditStartDate] = useState('');
     const [editEndDate, setEditEndDate] = useState('');
-    const [editRegularRate, setEditRegularRate] = useState('');
-    const [editOvertimeRate, setEditOvertimeRate] = useState('');
-    const [editDoubleTimeRate, setEditDoubleTimeRate] = useState('');
-    const [editPaycodeId, setEditPaycodeId] = useState('');
     const [editIsActive, setEditIsActive] = useState(true);
 
     /* ── Delete confirm state ──────────────────── */
@@ -66,10 +59,17 @@ const AssignmentManagement = () => {
     }, [assignments, search]);
 
     useEffect(() => {
+        setPage(1);
+    }, [search]);
+
+    const pageSize = 10;
+    const totalItems = filtered.length;
+    const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+    useEffect(() => {
         dispatch(fetchAssignmentsThunk());
         dispatch(fetchEmployeesThunk());
         dispatch(fetchClientsThunk());
-        dispatch(fetchPaycodesThunk());
     }, [dispatch]);
 
     /* ── Add handler ─────────────────────────────── */
@@ -78,8 +78,8 @@ const AssignmentManagement = () => {
             toast('Please select both employee and client', 'error');
             return;
         }
-        if (!startDate || !endDate || !regularRate || !overtimeRate || !doubleTimeRate) {
-            toast('Please fill in all date and rate fields', 'error');
+        if (!startDate || !endDate) {
+            toast('Please fill in start and end dates', 'error');
             return;
         }
         try {
@@ -89,9 +89,6 @@ const AssignmentManagement = () => {
                     client_id: selectedClientId,
                     start_date: startDate,
                     end_date: endDate,
-                    regular_rate: parseFloat(regularRate),
-                    overtime_rate: parseFloat(overtimeRate),
-                    double_time_rate: parseFloat(doubleTimeRate),
                 }),
             ).unwrap();
             toast('Employee assigned successfully');
@@ -101,9 +98,6 @@ const AssignmentManagement = () => {
             setEmployeeSearch('');
             setStartDate('');
             setEndDate('');
-            setRegularRate('');
-            setOvertimeRate('');
-            setDoubleTimeRate('');
         } catch (error) {
             console.error('Failed to create assignment:', error);
             toast('Failed to create assignment', 'error');
@@ -115,10 +109,6 @@ const AssignmentManagement = () => {
         setEditTarget(a);
         setEditStartDate(a.start_date);
         setEditEndDate(a.end_date);
-        setEditRegularRate(String(a.regular_rate));
-        setEditOvertimeRate(String(a.overtime_rate));
-        setEditDoubleTimeRate(String(a.double_time_rate));
-        setEditPaycodeId(a.paycode_id ?? '');
         setEditIsActive(a.is_active);
         setEditOpen(true);
     };
@@ -132,10 +122,6 @@ const AssignmentManagement = () => {
                     payload: {
                         start_date: editStartDate,
                         end_date: editEndDate,
-                        regular_rate: parseFloat(editRegularRate),
-                        overtime_rate: parseFloat(editOvertimeRate),
-                        double_time_rate: parseFloat(editDoubleTimeRate),
-                        paycode_id: editPaycodeId || null,
                         is_active: editIsActive,
                     },
                 }),
@@ -218,7 +204,6 @@ const AssignmentManagement = () => {
                                 <th>Client</th>
                                 <th>Start</th>
                                 <th>End</th>
-                                <th>Reg / OT / DT Rate</th>
                                 <th>Active</th>
                                 <th>Actions</th>
                             </tr>
@@ -226,20 +211,17 @@ const AssignmentManagement = () => {
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="no-data">
+                                    <td colSpan={6} className="no-data">
                                         No assignments found
                                     </td>
                                 </tr>
                             ) : (
-                                filtered.map((a) => (
+                                paginated.map((a) => (
                                     <tr key={a.assignment_id}>
                                         <td>{getEmployeeName(a.employee_id)}</td>
                                         <td>{getClientName(a.client_id)}</td>
                                         <td>{a.start_date}</td>
                                         <td>{a.end_date}</td>
-                                        <td>
-                                            ${a.regular_rate} / ${a.overtime_rate} / ${a.double_time_rate}
-                                        </td>
                                         <td>
                                             <Badge variant={a.is_active ? 'active' : 'inactive'}>
                                                 {a.is_active ? 'Yes' : 'No'}
@@ -270,6 +252,13 @@ const AssignmentManagement = () => {
                     </table>
                 )}
             </div>
+
+            <Pagination
+                page={page}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setPage}
+            />
 
             {/* ── Add Assignment Modal ──────────────── */}
             <Modal
@@ -344,36 +333,6 @@ const AssignmentManagement = () => {
                         style={{ width: '100%' }}
                     />
                 </div>
-                <div className="detail-row">
-                    <span className="detail-label">Regular Rate ($/hr)</span>
-                    <input
-                        type="number"
-                        step="0.01"
-                        value={regularRate}
-                        onChange={(e) => setRegularRate(e.target.value)}
-                        style={{ width: '100%' }}
-                    />
-                </div>
-                <div className="detail-row">
-                    <span className="detail-label">Overtime Rate ($/hr)</span>
-                    <input
-                        type="number"
-                        step="0.01"
-                        value={overtimeRate}
-                        onChange={(e) => setOvertimeRate(e.target.value)}
-                        style={{ width: '100%' }}
-                    />
-                </div>
-                <div className="detail-row">
-                    <span className="detail-label">Double Time Rate ($/hr)</span>
-                    <input
-                        type="number"
-                        step="0.01"
-                        value={doubleTimeRate}
-                        onChange={(e) => setDoubleTimeRate(e.target.value)}
-                        style={{ width: '100%' }}
-                    />
-                </div>
             </Modal>
 
             {/* ── Edit Assignment Modal ─────────────── */}
@@ -419,51 +378,6 @@ const AssignmentManagement = () => {
                                 onChange={(e) => setEditEndDate(e.target.value)}
                                 style={{ width: '100%' }}
                             />
-                        </div>
-                        <div className="detail-row">
-                            <span className="detail-label">Regular Rate ($/hr)</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={editRegularRate}
-                                onChange={(e) => setEditRegularRate(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                        <div className="detail-row">
-                            <span className="detail-label">Overtime Rate ($/hr)</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={editOvertimeRate}
-                                onChange={(e) => setEditOvertimeRate(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                        <div className="detail-row">
-                            <span className="detail-label">Double Time Rate ($/hr)</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={editDoubleTimeRate}
-                                onChange={(e) => setEditDoubleTimeRate(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                        <div className="detail-row">
-                            <span className="detail-label">Paycode</span>
-                            <select
-                                value={editPaycodeId}
-                                onChange={(e) => setEditPaycodeId(e.target.value)}
-                                style={{ width: '100%' }}
-                            >
-                                <option value="">-- None --</option>
-                                {paycodes.map((p) => (
-                                    <option key={p.paycode_id} value={p.paycode_id}>
-                                        {p.paycode} — {p.paycode_name}
-                                    </option>
-                                ))}
-                            </select>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Active</span>

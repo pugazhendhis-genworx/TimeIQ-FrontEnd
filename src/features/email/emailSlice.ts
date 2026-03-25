@@ -4,6 +4,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
   fetchEmailsApi,
+  fetchEmailByIdApi,
   fetchTimesheetEmailsApi,
   processAllEmailsApi,
   reprocessFailedEmailsApi,
@@ -16,6 +17,8 @@ const initialState: EmailState = {
   timesheetEmails: [],
   emailsLoading: false,
   timesheetEmailsLoading: false,
+  singleEmail: null,
+  singleEmailLoading: false,
   processing: false,
   reprocessing: false,
   error: null,
@@ -26,6 +29,17 @@ export const fetchEmailsThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       return await fetchEmailsApi();
+    } catch (err) {
+      return rejectWithValue(extractErrorMessage(err));
+    }
+  },
+);
+
+export const fetchEmailByIdThunk = createAsyncThunk(
+  'email/fetchEmailById',
+  async (emailId: string, { rejectWithValue }) => {
+    try {
+      return await fetchEmailByIdApi(emailId);
     } catch (err) {
       return rejectWithValue(extractErrorMessage(err));
     }
@@ -88,6 +102,23 @@ const emailSlice = createSlice({
         state.emailsLoading = false;
         state.error =
           (payload as string) ?? 'Failed to fetch emails';
+      });
+
+    /* Single email by ID */
+    builder
+      .addCase(fetchEmailByIdThunk.pending, (state) => {
+        state.singleEmailLoading = true;
+        state.singleEmail = null;
+        state.error = null;
+      })
+      .addCase(fetchEmailByIdThunk.fulfilled, (state, { payload }) => {
+        state.singleEmailLoading = false;
+        state.singleEmail = payload;
+      })
+      .addCase(fetchEmailByIdThunk.rejected, (state, { payload }) => {
+        state.singleEmailLoading = false;
+        state.error =
+          (payload as string) ?? 'Failed to fetch email';
       });
 
     builder

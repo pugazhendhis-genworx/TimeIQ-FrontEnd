@@ -33,10 +33,6 @@ const ViewEmployeeModal = ({
       }
     >
       <div className="detail-row">
-        <span className="detail-label">Employee ID</span>
-        <span>{employee.employee_id}</span>
-      </div>
-      <div className="detail-row">
         <span className="detail-label">Name</span>
         <span>{`${employee.first_name} ${employee.last_name}`}</span>
       </div>

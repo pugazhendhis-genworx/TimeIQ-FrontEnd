@@ -9,8 +9,6 @@ import type {
 } from '../types/timesheet.types';
 
 const TIMESHEET_PREFIX = '/timesheet';
-const APPROVAL_PREFIX = '/approval';
-
 export const fetchTimesheetsApi = async (): Promise<Timesheet[]> => {
   const { data } = await servicesApi.get<Timesheet[]>(
     `${TIMESHEET_PREFIX}/get-timesheets`,
@@ -75,16 +73,7 @@ export const updateTimesheetApi = async (
   return data;
 };
 
-export const decideApprovalApi = async (
-  timesheetId: string,
-  payload: { decision: 'APPROVED' | 'REJECTED'; comment?: string },
-): Promise<unknown> => {
-  const { data } = await servicesApi.post(
-    `${APPROVAL_PREFIX}/${timesheetId}/decide`,
-    payload,
-  );
-  return data;
-};
+
 
 /** GET /timesheet/extracted-data/{id} — enriched display data with names & matching outcomes */
 export const fetchExtractedTimesheetByIdApi = async (

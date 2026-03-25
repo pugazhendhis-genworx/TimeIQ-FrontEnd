@@ -15,6 +15,7 @@ import { toast } from '../../utils/toast';
 import AddEmployeeModal from './components/AddEmployeeModal';
 import ViewEmployeeModal from './components/ViewEmployeeModal';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
 
 const EmployeeManagement = () => {
   const dispatch = useAppDispatch();
@@ -27,6 +28,7 @@ const EmployeeManagement = () => {
   const [clientFilter, setClientFilter] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewEmployeeId, setViewEmployeeId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   /* ── Assignment Modal State ──────────────── */
   const [assignOpen, setAssignOpen] = useState(false);
@@ -63,6 +65,14 @@ const EmployeeManagement = () => {
     // No client filter on employee yet – backend schema does not link employees to clients
     return result;
   }, [employees, search, statusFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, clientFilter]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleDelete = async (employeeId: string) => {
     try {
@@ -181,12 +191,12 @@ const EmployeeManagement = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="no-data">
+                  <td colSpan={7} className="no-data">
                     No employees match your filters
                   </td>
                 </tr>
               ) : (
-                filtered.map((e) => (
+                paginated.map((e) => (
                   <tr key={e.employee_id}>
                     <td>{`${e.first_name} ${e.last_name}`}</td>
                     <td>{e.emp_email}</td>
@@ -241,6 +251,13 @@ const EmployeeManagement = () => {
           </table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
 
       <AddEmployeeModal
         open={addModalOpen}

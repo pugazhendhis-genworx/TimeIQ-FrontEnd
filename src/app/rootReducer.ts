@@ -13,6 +13,7 @@ import auditReducer from '../features/audit/auditSlice';
 import assignmentReducer from '../features/assignment/assignmentSlice';
 import paycodeReducer from '../features/paycode/paycodeSlice';
 import extractedReducer from '../features/extracted/extractedSlice';
+import ruleViolationReducer from '../features/rule-violations/ruleViolationSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -26,6 +27,7 @@ const rootReducer = combineReducers({
   assignment: assignmentReducer,
   paycode: paycodeReducer,
   extracted: extractedReducer,
+  ruleViolation: ruleViolationReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

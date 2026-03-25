@@ -41,7 +41,10 @@ const PasswordStrength = ({ password }: PasswordStrengthProps) => {
                 : 'password-strength__rule--fail'
             }
           >
-            {rule.test(password) ? '✓' : '✗'} {rule.label}
+            <span className="password-strength__rule-mark">
+              {rule.test(password) ? 'Met' : 'Not met'}
+            </span>{' '}
+            {rule.label}
           </li>
         ))}
       </ul>

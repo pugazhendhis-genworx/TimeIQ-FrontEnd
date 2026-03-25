@@ -14,15 +14,15 @@ import {
   RolesPage,
   ProfilePage,
 } from '../features/dashboard';
-import { ClientManagement } from '../features/client';
-import { WhitelistManagement } from '../features/whitelist';
-import { EmployeeManagement } from '../features/employee';
-import { EmailListPage, TimesheetEmailPage } from '../features/email';
+import { EmailListPage } from '../features/email';
 import { TimesheetListPage, ExtractedTimesheetPage } from '../features/timesheet';
 import { ExtractedTimesheetsPage } from '../features/extracted';
-import { AssignmentManagement } from '../features/assignment';
 import { PaycodeManagement } from '../features/paycode';
 import { AuditorDashboard, AuditorTimesheetPage, AuditLogsPage } from '../features/audit';
+import { RuleViolationsPage } from '../features/rule-violations';
+import { PayrollReadyPage } from '../features/payroll-ready';
+import { ClientConfigPage } from '../features/client-config';
+import { WorkforcePage } from '../features/workforce';
 
 const router = createBrowserRouter([
   /* ── Public auth routes ────────────────────── */
@@ -50,18 +50,17 @@ const router = createBrowserRouter([
               { path: '/dashboard', element: <DashboardPage /> },
               { path: '/dashboard/users', element: <UserManagement /> },
               { path: '/dashboard/roles', element: <RolesPage /> },
-              { path: '/dashboard/clients', element: <ClientManagement /> },
-              { path: '/dashboard/whitelist', element: <WhitelistManagement /> },
-              { path: '/dashboard/employees', element: <EmployeeManagement /> },
+              { path: '/dashboard/client-config', element: <ClientConfigPage /> },
+              { path: '/dashboard/workforce', element: <WorkforcePage /> },
               { path: '/dashboard/emails', element: <EmailListPage /> },
-              { path: '/dashboard/timesheet-emails', element: <TimesheetEmailPage /> },
               { path: '/dashboard/timesheets', element: <TimesheetListPage /> },
               {
                 path: '/dashboard/extracted-timesheets/:timesheetId',
                 element: <ExtractedTimesheetPage />,
               },
-              { path: '/dashboard/assignments', element: <AssignmentManagement /> },
               { path: '/dashboard/payroll', element: <PaycodeManagement /> },
+              { path: '/dashboard/rule-violations', element: <RuleViolationsPage /> },
+              { path: '/dashboard/payroll-ready', element: <PayrollReadyPage /> },
               { path: '/dashboard/extracted-timesheets', element: <ExtractedTimesheetsPage /> },
               { path: '/dashboard/audit', element: <AuditorDashboard /> },
               {

@@ -7,6 +7,7 @@ import { fetchWhitelistsThunk } from './whitelistSlice';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import AddWhitelistModal from './components/AddWhitelistModal';
+import Pagination from '../../components/common/Pagination';
 
 const WhitelistManagement = () => {
   const dispatch = useAppDispatch();
@@ -17,6 +18,7 @@ const WhitelistManagement = () => {
   const [clientFilter, setClientFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchWhitelistsThunk());
@@ -71,6 +73,14 @@ const WhitelistManagement = () => {
 
     return result;
   }, [whitelists, search, clientFilter, statusFilter, clientMap]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, clientFilter, statusFilter]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   /* ── Format date ───────────────────────────── */
   const fmtDate = (iso: string) => {
@@ -149,7 +159,7 @@ const WhitelistManagement = () => {
                   </td>
                 </tr>
               ) : (
-                filtered.map((w) => (
+                paginated.map((w) => (
                   <tr key={w.email_whitelist_id}>
                     <td style={{ fontWeight: 600 }}>
                       {clientMap[w.client_id]?.name ?? '--'}
@@ -180,6 +190,13 @@ const WhitelistManagement = () => {
           </table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
 
       <AddWhitelistModal
         open={addModalOpen}

@@ -10,6 +10,7 @@ import {
 } from './emailSlice';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
 import { toast } from '../../utils/toast';
 import config from '../../config/apiConfig';
 
@@ -21,6 +22,46 @@ const EmailListPage = () => {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pollingProcess, setPollingProcess] = useState(false);
+
+  const terminalEmailStatuses = new Set([
+    'COMPLETED',
+    'FAILED',
+    'NEEDS_REVIEW',
+    'IGNORED',
+  ]);
+
+  const isTimeoutError = (err: unknown) => {
+    const e = err as { code?: string; message?: string } | null;
+    const code = e?.code;
+    const msg = String(e?.message ?? '').toLowerCase();
+    return code === 'ECONNABORTED' || msg.includes('timeout');
+  };
+
+  const pollForIngestedEmails = async (ingestedIds: Set<string>) => {
+    const pollIntervalMs = 4000;
+    const maxWaitMs = 180000;
+    const start = Date.now();
+    let lastEmails = emails;
+
+    while (Date.now() - start < maxWaitMs) {
+      lastEmails = await dispatch(fetchEmailsThunk()).unwrap();
+
+      const byId = new Map(
+        lastEmails.map((e) => [e.email_message_id, e.processed_status]),
+      );
+      const done = Array.from(ingestedIds).every((id) =>
+        terminalEmailStatuses.has(byId.get(id) ?? ''),
+      );
+
+      if (done) return { done: true, emails: lastEmails };
+
+      await new Promise((r) => setTimeout(r, pollIntervalMs));
+    }
+
+    return { done: false, emails: lastEmails };
+  };
 
   useEffect(() => {
     dispatch(fetchEmailsThunk());
@@ -53,6 +94,14 @@ const EmailListPage = () => {
     });
   }, [emails, search, classificationFilter, sortOrder]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, classificationFilter, sortOrder]);
+
+  const pageSize = 10;
+  const totalItems = filtered.length;
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   const selected = emails.find((e) => e.email_message_id === selectedId) ?? null;
 
   const openDetail = (id: string) => {
@@ -77,14 +126,78 @@ const EmailListPage = () => {
             disabled={processing || reprocessing}
             onClick={async () => {
               if (processing || reprocessing) return;
+              const ingestedIds = new Set(
+                emails
+                  .filter((e) => e.processed_status === 'INGESTED')
+                  .map((e) => e.email_message_id),
+              );
+
+              if (ingestedIds.size === 0) {
+                toast('No new emails to classify right now.');
+                return;
+              }
+
+              toast('Classification started. This may take a moment for large batches…');
               try {
                 const res: any = await dispatch(processAllEmailsThunk()).unwrap();
-                toast(
-                  `Processed ${res.processed_count} emails, ${res.failed_count} failures`,
-                );
+                if (res.failed_count > 0) {
+                  toast(
+                    `Done: ${res.processed_count} processed, ${res.failed_count} failed — check individual emails`,
+                    'error',
+                  );
+                } else {
+                  toast(`Successfully processed ${res.processed_count} email(s)`);
+                }
                 dispatch(fetchEmailsThunk());
-              } catch {
-                toast('Bulk processing failed', 'error');
+              } catch (err) {
+                if (isTimeoutError(err)) {
+                  setPollingProcess(true);
+                  toast('Processing is still running; checking results…');
+
+                  try {
+                    const { done, emails: finalEmails } = await pollForIngestedEmails(
+                      ingestedIds,
+                    );
+
+                    const byId = new Map(
+                      finalEmails.map((e) => [e.email_message_id, e.processed_status]),
+                    );
+
+                    const failedCount = Array.from(ingestedIds).filter((id) => {
+                      const status = byId.get(id) ?? '';
+                      return status === 'FAILED' || status === 'NEEDS_REVIEW';
+                    }).length;
+
+                    const processedCount = Array.from(ingestedIds).filter((id) => {
+                      const status = byId.get(id) ?? '';
+                      return status === 'COMPLETED' || status === 'IGNORED';
+                    }).length;
+
+                    if (!done) {
+                      toast(
+                        'Processing is still running. Refresh to see final results.',
+                        'error',
+                      );
+                    } else if (failedCount > 0) {
+                      toast(
+                        `Done: ${processedCount} processed, ${failedCount} failed — check individual emails`,
+                        'error',
+                      );
+                    } else {
+                      toast(`Successfully processed ${processedCount} email(s)`);
+                    }
+                  } catch {
+                    toast('Server error while checking processing results.', 'error');
+                  } finally {
+                    setPollingProcess(false);
+                    dispatch(fetchEmailsThunk());
+                  }
+                } else {
+                  toast(
+                    'Server error while processing emails. Please try again.',
+                    'error',
+                  );
+                }
               }
             }}
           >
@@ -133,11 +246,11 @@ const EmailListPage = () => {
             className="btn--sm"
             onClick={() => setSortOrder((s) => (s === 'desc' ? 'asc' : 'desc'))}
           >
-            {sortOrder === 'desc' ? '↓ Newest First' : '↑ Oldest First'}
+            {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
           </Button>
         </div>
 
-        {(processing || reprocessing) && (
+        {(processing || reprocessing || pollingProcess) && (
           <div
             style={{
               padding: '0.6rem 1rem',
@@ -149,9 +262,11 @@ const EmailListPage = () => {
               color: 'var(--color-primary)',
             }}
           >
-            {processing
-              ? '⏳ Classifying and processing emails — please wait, this may take a moment…'
-              : '⏳ Retrying failed emails — please wait…'}
+            {pollingProcess
+              ? 'Processing is taking longer than expected; checking results…'
+              : processing
+                ? 'Classifying and processing emails — please wait, this may take a moment…'
+                : 'Retrying failed emails — please wait…'}
           </div>
         )}
         {emailsLoading ? (
@@ -178,7 +293,7 @@ const EmailListPage = () => {
                   </td>
                 </tr>
               ) : (
-                filtered.map((e) => (
+                paginated.map((e) => (
                   <tr key={e.email_message_id}>
                     <td>{new Date(e.received_at).toLocaleString()}</td>
                     <td>{e.sender_email}</td>
@@ -201,6 +316,13 @@ const EmailListPage = () => {
           </table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
 
       {selected && (
         <Modal

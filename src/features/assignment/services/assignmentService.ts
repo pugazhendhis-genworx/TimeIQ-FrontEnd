@@ -18,9 +18,10 @@ export const createAssignmentApi = async (assignment: {
     client_id: string;
     start_date: string;
     end_date: string;
-    regular_rate: number;
-    overtime_rate: number;
-    double_time_rate: number;
+    regular_rate?: number;
+    overtime_rate?: number;
+    double_time_rate?: number;
+    paycode_id?: string | null;
 }): Promise<Assignment> => {
     const { data } = await servicesApi.post<Assignment>(
         `${ASSIGNMENT_PREFIX}/assign-employee`,

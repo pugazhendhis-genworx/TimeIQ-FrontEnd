@@ -6,7 +6,6 @@ import type {
   ManualReviewItem,
   ApprovalRecord,
   AuditLog,
-  AuditDecision,
 } from '../types/audit.types';
 
 const MANUAL_REVIEW_PREFIX = '/manual-review';

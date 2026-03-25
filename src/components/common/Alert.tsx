@@ -10,9 +10,9 @@ interface AlertProps {
 }
 
 const iconMap: Record<AlertProps['type'], string> = {
-  success: '✅',
-  error: '❌',
-  info: 'ℹ️',
+  success: 'OK',
+  error: 'Error',
+  info: 'Info',
 };
 
 const Alert = ({ type, children, onClose }: AlertProps) => (

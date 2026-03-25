@@ -7,6 +7,7 @@ import { fetchPaycodesThunk, createPaycodeThunk } from './paycodeSlice';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { toast } from '../../utils/toast';
+import Pagination from '../../components/common/Pagination';
 
 const PaycodeManagement = () => {
     const dispatch = useAppDispatch();
@@ -15,6 +16,7 @@ const PaycodeManagement = () => {
     const [search, setSearch] = useState('');
     const [addOpen, setAddOpen] = useState(false);
     const [newPaycode, setNewPaycode] = useState({ paycode: '', paycode_name: '' });
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         dispatch(fetchPaycodesThunk());
@@ -29,6 +31,14 @@ const PaycodeManagement = () => {
                 p.paycode_name.toLowerCase().includes(q),
         );
     }, [paycodes, search]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search]);
+
+    const pageSize = 10;
+    const totalItems = filtered.length;
+    const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
     const handleAdd = async () => {
         try {
@@ -80,7 +90,7 @@ const PaycodeManagement = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                filtered.map((p) => (
+                                paginated.map((p) => (
                                     <tr key={p.paycode_id}>
                                         <td>{p.paycode}</td>
                                         <td>{p.paycode_name}</td>
@@ -92,6 +102,13 @@ const PaycodeManagement = () => {
                     </table>
                 )}
             </div>
+
+            <Pagination
+                page={page}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setPage}
+            />
 
             <Modal
                 open={addOpen}

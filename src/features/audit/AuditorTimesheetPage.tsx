@@ -1,22 +1,39 @@
 /* ──────────────────────────────────────────────
  *  Auditor Timesheet Review list
  * ────────────────────────────────────────────── */
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchPendingReviewsThunk } from './auditSlice';
 import { approveTimesheetApi, rejectTimesheetApi } from '../extracted/services/extractedDataService';
 import Button from '../../components/common/Button';
 import { toast } from '../../utils/toast';
+import Pagination from '../../components/common/Pagination';
 
 const AuditorTimesheetPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { pendingReviews, loading } = useAppSelector((s) => s.audit);
+  const [page, setPage] = useState(1);
+
+  const pageSize = 10;
+  const totalItems = pendingReviews.length;
+  const paginated = useMemo(
+    () =>
+      pendingReviews.slice(
+        (page - 1) * pageSize,
+        page * pageSize,
+      ),
+    [pendingReviews, page],
+  );
 
   useEffect(() => {
     dispatch(fetchPendingReviewsThunk());
   }, [dispatch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [pendingReviews.length]);
 
   const handleDecision = async (timesheetId: string, decision: 'APPROVED' | 'REJECTED') => {
     try {
@@ -64,7 +81,7 @@ const AuditorTimesheetPage = () => {
                   </td>
                 </tr>
               ) : (
-                pendingReviews.map((r) => (
+                paginated.map((r) => (
                   <tr key={r.review_id}>
                     <td>{r.review_id}</td>
                     <td>{r.timesheet_id}</td>
@@ -100,6 +117,13 @@ const AuditorTimesheetPage = () => {
             </tbody>
           </table>
         )}
+
+        <Pagination
+          page={page}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
