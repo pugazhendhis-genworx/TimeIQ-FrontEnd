@@ -9,7 +9,7 @@ import {
   fetchFlaggedTimesheetsThunk,
   fetchViolationDetailThunk,
 } from './ruleViolationSlice';
-import { fetchEmailsThunk } from '../email/emailSlice';
+import { fetchEmailByIdThunk } from '../email/emailSlice';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
@@ -37,7 +37,7 @@ const RuleViolationsPage = () => {
     detailByTimesheetId,
     detailLoadingTimesheetId,
   } = useAppSelector((s) => s.ruleViolation);
-  const { emails } = useAppSelector((s) => s.email);
+  const { singleEmail, singleEmailLoading } = useAppSelector((s) => s.email);
 
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<'week' | 'email' | 'email_received'>('email_received');
@@ -46,7 +46,6 @@ const RuleViolationsPage = () => {
   const [violationsModalId, setViolationsModalId] = useState<string | null>(null);
   const [sourceSheetModalId, setSourceSheetModalId] = useState<string | null>(null);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
-  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [pendingMailTimesheetId, setPendingMailTimesheetId] = useState<string | null>(
     null,
   );
@@ -56,7 +55,6 @@ const RuleViolationsPage = () => {
 
   useEffect(() => {
     dispatch(fetchFlaggedTimesheetsThunk());
-    dispatch(fetchEmailsThunk());
   }, [dispatch]);
 
   useEffect(() => {
@@ -81,7 +79,7 @@ const RuleViolationsPage = () => {
     const d = detailByTimesheetId[pendingMailTimesheetId];
     const em = d?.timesheet?.email_message_id;
     if (em && detailLoadingTimesheetId !== pendingMailTimesheetId) {
-      setSelectedEmailId(em);
+      dispatch(fetchEmailByIdThunk(em));
       setEmailModalOpen(true);
       setPendingMailTimesheetId(null);
     }
@@ -89,12 +87,13 @@ const RuleViolationsPage = () => {
     pendingMailTimesheetId,
     detailByTimesheetId,
     detailLoadingTimesheetId,
+    dispatch,
   ]);
 
   const openSourceMailForRow = (timesheetId: string) => {
     const existing = detailByTimesheetId[timesheetId]?.timesheet?.email_message_id;
     if (existing) {
-      setSelectedEmailId(existing);
+      dispatch(fetchEmailByIdThunk(existing));
       setEmailModalOpen(true);
       return;
     }
@@ -167,8 +166,6 @@ const RuleViolationsPage = () => {
   const sourceDetail = sourceSheetModalId
     ? detailByTimesheetId[sourceSheetModalId]
     : null;
-  const selectedEmail =
-    emails.find((e) => e.email_message_id === selectedEmailId) ?? null;
 
   return (
     <>
@@ -415,29 +412,31 @@ const RuleViolationsPage = () => {
           </Button>
         }
       >
-        {selectedEmail ? (
+        {singleEmailLoading ? (
+          <div className="no-data">Loading email…</div>
+        ) : singleEmail ? (
           <>
             <div className="detail-row">
               <span className="detail-label">Sender</span>
-              <span>{selectedEmail.sender_email}</span>
+              <span>{singleEmail.sender_email}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Subject</span>
-              <span>{selectedEmail.subject ?? '—'}</span>
+              <span>{singleEmail.subject ?? '—'}</span>
             </div>
             <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
               <strong>Body</strong>
               <p style={{ marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>
-                {selectedEmail.body ?? '—'}
+                {singleEmail.body ?? '—'}
               </p>
             </div>
             <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
               <strong>Attachments</strong>
-              {selectedEmail.attachments.length === 0 ? (
+              {singleEmail.attachments.length === 0 ? (
                 <p style={{ marginTop: '0.25rem' }}>None</p>
               ) : (
                 <ul style={{ marginTop: '0.25rem', paddingLeft: '1.25rem' }}>
-                  {selectedEmail.attachments.map((att) => (
+                  {singleEmail.attachments.map((att) => (
                     <li key={att.attachment_id}>
                       <a
                         href={`${config.SERVICES_API_BASE_URL}/attachments/${encodeURIComponent(att.file_name)}`}
@@ -454,9 +453,7 @@ const RuleViolationsPage = () => {
           </>
         ) : (
           <div className="no-data">
-            {selectedEmailId
-              ? 'Email not loaded. Return to the list and open from a loaded detail.'
-              : 'No email selected.'}
+            No email selected.
           </div>
         )}
       </Modal>

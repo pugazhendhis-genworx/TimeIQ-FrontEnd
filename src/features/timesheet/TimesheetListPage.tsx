@@ -9,13 +9,11 @@ import {
   fetchTimesheetsByStatusThunk,
   fetchTimesheetsByClientThunk,
   submitForApprovalThunk,
-  fetchTimesheetEntriesThunk,
   fetchExtractedTimesheetThunk,
   updateTimesheetThunk,
 } from './timesheetSlice';
 import { fetchFlaggedTimesheetsThunk } from '../rule-violations/ruleViolationSlice';
-import { fetchEmployeesThunk } from '../employee/employeeSlice';
-import { fetchEmailsThunk } from '../email/emailSlice';
+import { fetchEmailByIdThunk } from '../email/emailSlice';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
@@ -54,20 +52,18 @@ const TimesheetListPage = () => {
   const {
     timesheets,
     timesheetsLoading,
-    selectedTimesheetId,
-    entriesByTimesheetId,
     extractedById,
     extractedLoading,
   } = useAppSelector((s) => s.timesheet);
   const { flaggedList } = useAppSelector((s) => s.ruleViolation);
   const { clients } = useAppSelector((s) => s.client);
-  const { employees } = useAppSelector((s) => s.employee);
-  const { emails } = useAppSelector((s) => s.email);
+  const { singleEmail, singleEmailLoading } = useAppSelector((s) => s.email);
 
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [clientFilter, setClientFilter] = useState('');
   const [search, setSearch] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
+  const [detailTimesheetId, setDetailTimesheetId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<Record<string, string>>({});
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -75,7 +71,6 @@ const TimesheetListPage = () => {
 
   /* ── Email detail modal state ────────────────── */
   const [emailModalOpen, setEmailModalOpen] = useState(false);
-  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
 
   const flaggedIds = useMemo(
     () => new Set(flaggedList.map((f) => f.timesheet_id)),
@@ -84,19 +79,8 @@ const TimesheetListPage = () => {
 
   useEffect(() => {
     dispatch(fetchTimesheetsThunk());
-    dispatch(fetchEmployeesThunk());
-    dispatch(fetchEmailsThunk());
     dispatch(fetchFlaggedTimesheetsThunk());
   }, [dispatch]);
-
-  /* Pre-load raw entries for employee-name search */
-  useEffect(() => {
-    timesheets.forEach((t) => {
-      if (!entriesByTimesheetId[t.timesheet_id]) {
-        dispatch(fetchTimesheetEntriesThunk(t.timesheet_id));
-      }
-    });
-  }, [dispatch, timesheets, entriesByTimesheetId]);
 
   const filtered = useMemo(() => {
     let result = timesheets;
@@ -107,13 +91,7 @@ const TimesheetListPage = () => {
       result = result.filter((t) => {
         const clientName =
           clients.find((c) => c.client_id === t.client_id)?.client_name ?? '';
-        const entries = entriesByTimesheetId[t.timesheet_id] || [];
-        const employeeMatch = entries.some((ent) => {
-          const emp = employees.find((e) => e.employee_id === ent.employee_id);
-          if (!emp) return false;
-          return `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(q);
-        });
-        return clientName.toLowerCase().includes(q) || employeeMatch;
+        return clientName.toLowerCase().includes(q);
       });
     }
     /* Sort by updated_at */
@@ -123,7 +101,7 @@ const TimesheetListPage = () => {
       return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
     return sorted;
-  }, [timesheets, statusFilter, clientFilter, search, clients, employees, entriesByTimesheetId, sortOrder]);
+  }, [timesheets, statusFilter, clientFilter, search, clients, sortOrder]);
 
   useEffect(() => {
     setPage(1);
@@ -146,12 +124,14 @@ const TimesheetListPage = () => {
   };
 
   const handleOpenDetails = (id: string) => {
+    setDetailTimesheetId(id);
     dispatch(fetchExtractedTimesheetThunk(id));
     setDetailOpen(true);
   };
 
   const handleCloseDetails = () => {
     setDetailOpen(false);
+    setDetailTimesheetId(null);
   };
 
   const handleSubmitForApproval = (id: string) => {
@@ -174,15 +154,13 @@ const TimesheetListPage = () => {
 
   /* ── View Source Email ──────────────────────── */
   const openEmailModal = (emailMessageId: string) => {
-    setSelectedEmailId(emailMessageId);
+    dispatch(fetchEmailByIdThunk(emailMessageId));
     setEmailModalOpen(true);
   };
 
-  const selectedEmail = emails.find((e) => e.email_message_id === selectedEmailId) ?? null;
-
   /* Current extracted timesheet for the open detail modal */
   const extractedDetail =
-    selectedTimesheetId ? extractedById[selectedTimesheetId] ?? null : null;
+    detailTimesheetId ? extractedById[detailTimesheetId] ?? null : null;
 
   return (
     <>
@@ -195,7 +173,7 @@ const TimesheetListPage = () => {
           <input
             className="table-toolbar__input"
             type="text"
-            placeholder="Search by client or employee…"
+            placeholder="Search by client…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -513,41 +491,43 @@ const TimesheetListPage = () => {
           <Button variant="ghost" onClick={() => setEmailModalOpen(false)}>Close</Button>
         }
       >
-        {selectedEmail ? (
+        {singleEmailLoading ? (
+          <div className="no-data">Loading email…</div>
+        ) : singleEmail ? (
           <>
             <div className="detail-row">
               <span className="detail-label">Sender</span>
-              <span>{selectedEmail.sender_email}</span>
+              <span>{singleEmail.sender_email}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Received At</span>
-              <span>{new Date(selectedEmail.received_at).toLocaleString()}</span>
+              <span>{new Date(singleEmail.received_at).toLocaleString()}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Subject</span>
-              <span>{selectedEmail.subject ?? '—'}</span>
+              <span>{singleEmail.subject ?? '—'}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Classification</span>
-              <span>{selectedEmail.classification ?? '—'}</span>
+              <span>{singleEmail.classification ?? '—'}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Processed Status</span>
-              <span>{selectedEmail.processed_status ?? '—'}</span>
+              <span>{singleEmail.processed_status ?? '—'}</span>
             </div>
             <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
               <strong>Body Preview</strong>
               <p style={{ marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>
-                {selectedEmail.body ?? 'No body available'}
+                {singleEmail.body ?? 'No body available'}
               </p>
             </div>
             <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
               <strong>Attachments</strong>
-              {selectedEmail.attachments.length === 0 ? (
+              {singleEmail.attachments.length === 0 ? (
                 <p style={{ marginTop: '0.25rem' }}>No attachments</p>
               ) : (
                 <ul style={{ marginTop: '0.25rem', paddingLeft: '1.25rem' }}>
-                  {selectedEmail.attachments.map((att) => (
+                  {singleEmail.attachments.map((att) => (
                     <li key={att.attachment_id}>
                       <a
                         href={`${config.SERVICES_API_BASE_URL}/attachments/${encodeURIComponent(
@@ -566,7 +546,7 @@ const TimesheetListPage = () => {
           </>
         ) : (
           <div className="no-data">
-            Email not found. The source email may not have been loaded yet.
+            No email selected.
           </div>
         )}
       </Modal>

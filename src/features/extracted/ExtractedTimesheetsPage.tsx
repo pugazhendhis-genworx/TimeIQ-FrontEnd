@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetsThunk } from './extractedSlice';
-import { fetchEmailsThunk } from '../email/emailSlice';
+import { fetchEmailByIdThunk } from '../email/emailSlice';
 import { approveTimesheetApi, rejectTimesheetApi } from './services/extractedDataService';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -28,7 +28,7 @@ const statusLabelMap: Record<string, string> = {
 const ExtractedTimesheetsPage = () => {
     const dispatch = useAppDispatch();
     const { extractedData, loading } = useAppSelector((s) => s.extracted);
-    const { emails } = useAppSelector((s) => s.email);
+    const { singleEmail, singleEmailLoading } = useAppSelector((s) => s.email);
     const [search, setSearch] = useState('');
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [page, setPage] = useState(1);
@@ -37,11 +37,9 @@ const ExtractedTimesheetsPage = () => {
 
     /* Email detail modal state */
     const [emailModalOpen, setEmailModalOpen] = useState(false);
-    const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
 
     useEffect(() => {
         dispatch(fetchExtractedTimesheetsThunk());
-        dispatch(fetchEmailsThunk());
     }, [dispatch]);
 
     const filtered = useMemo(() => {
@@ -106,11 +104,9 @@ const ExtractedTimesheetsPage = () => {
     };
 
     const openEmailModal = (emailMessageId: string) => {
-        setSelectedEmailId(emailMessageId);
+        dispatch(fetchEmailByIdThunk(emailMessageId));
         setEmailModalOpen(true);
     };
-
-    const selectedEmail = emails.find((e) => e.email_message_id === selectedEmailId) ?? null;
 
     return (
         <>
@@ -328,41 +324,43 @@ const ExtractedTimesheetsPage = () => {
                     <Button variant="ghost" onClick={() => setEmailModalOpen(false)}>Close</Button>
                 }
             >
-                {selectedEmail ? (
+                {singleEmailLoading ? (
+                    <div className="no-data">Loading email…</div>
+                ) : singleEmail ? (
                     <>
                         <div className="detail-row">
                             <span className="detail-label">Sender</span>
-                            <span>{selectedEmail.sender_email}</span>
+                            <span>{singleEmail.sender_email}</span>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Received At</span>
-                            <span>{new Date(selectedEmail.received_at).toLocaleString()}</span>
+                            <span>{new Date(singleEmail.received_at).toLocaleString()}</span>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Subject</span>
-                            <span>{selectedEmail.subject ?? '—'}</span>
+                            <span>{singleEmail.subject ?? '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Classification</span>
-                            <span>{selectedEmail.classification ?? '—'}</span>
+                            <span>{singleEmail.classification ?? '—'}</span>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Processed Status</span>
-                            <span>{selectedEmail.processed_status ?? '—'}</span>
+                            <span>{singleEmail.processed_status ?? '—'}</span>
                         </div>
                         <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
                             <strong>Body Preview</strong>
                             <p style={{ marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>
-                                {selectedEmail.body ?? 'No body available'}
+                                {singleEmail.body ?? 'No body available'}
                             </p>
                         </div>
                         <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
                             <strong>Attachments</strong>
-                            {selectedEmail.attachments.length === 0 ? (
+                            {singleEmail.attachments.length === 0 ? (
                                 <p style={{ marginTop: '0.25rem' }}>No attachments</p>
                             ) : (
                                 <ul style={{ marginTop: '0.25rem', paddingLeft: '1.25rem' }}>
-                                    {selectedEmail.attachments.map((att) => (
+                                    {singleEmail.attachments.map((att) => (
                                         <li key={att.attachment_id}>
                                             <a
                                                 href={`${config.SERVICES_API_BASE_URL}/attachments/${encodeURIComponent(
@@ -381,7 +379,7 @@ const ExtractedTimesheetsPage = () => {
                     </>
                 ) : (
                     <div className="no-data">
-                        Email not found. The source email may not have been loaded yet.
+                        No email selected.
                     </div>
                 )}
             </Modal>

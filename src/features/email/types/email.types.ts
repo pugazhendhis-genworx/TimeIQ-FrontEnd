@@ -29,6 +29,8 @@ export interface EmailState {
   timesheetEmails: EmailMessage[];
   emailsLoading: boolean;
   timesheetEmailsLoading: boolean;
+  singleEmail: EmailMessage | null;
+  singleEmailLoading: boolean;
   processing?: boolean;
   reprocessing?: boolean;
   error: string | null;

@@ -175,74 +175,74 @@ const ExtractedTimesheetPage = () => {
         ) : (
           <>
             <div style={{ overflowX: 'auto' }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Employee</th>
-                  <th>Paycode</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th style={{ textAlign: 'right' }}>Regular (h)</th>
-                  <th style={{ textAlign: 'right' }}>Overtime (h)</th>
-                  <th style={{ textAlign: 'right' }}>Double Time (h)</th>
-                  <th>Match Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedEntries.map((entry, idx) => {
-                  const meta = matchingMeta[entry.matching_status] ??
-                    { label: entry.matching_status, variant: 'info' };
-                  const reason =
-                    entry.employee_unmatched_reason ??
-                    entry.client_unmatched_reason ?? null;
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Employee</th>
+                    <th>Paycode</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th style={{ textAlign: 'right' }}>Regular (h)</th>
+                    <th style={{ textAlign: 'right' }}>Overtime (h)</th>
+                    <th style={{ textAlign: 'right' }}>Double Time (h)</th>
+                    <th>Match Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedEntries.map((entry, idx) => {
+                    const meta = matchingMeta[entry.matching_status] ??
+                      { label: entry.matching_status, variant: 'info' };
+                    const reason =
+                      entry.employee_unmatched_reason ??
+                      entry.client_unmatched_reason ?? null;
 
-                  return (
-                    <tr key={entry.timeentry_id}>
-                      <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
-                        {(entryPage - 1) * pageSize + idx + 1}
-                      </td>
-                      <td>
-                        {entry.employee_name ?? (
-                          <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Unknown</span>
-                        )}
-                      </td>
-                      <td>
-                        {entry.paycode_code
-                          ? <span className="client-code-cell">{entry.paycode_code}</span>
-                          : '—'}
-                      </td>
-                      <td>{fmt(entry.start_time)}</td>
-                      <td>{fmt(entry.end_time)}</td>
-                      <td style={{ textAlign: 'right' }}>{Number(entry.regular_hours).toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>{Number(entry.overtime_hours).toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>{Number(entry.double_time_hours).toFixed(2)}</td>
-                      <td>
-                        <div>
-                          <Badge variant={meta.variant}>{meta.label}</Badge>
-                          {entry.match_confidence != null && (
-                            <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', marginLeft: '0.4rem' }}>
-                              {(entry.match_confidence * 100).toFixed(0)}%
-                            </span>
+                    return (
+                      <tr key={entry.timeentry_id}>
+                        <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+                          {(entryPage - 1) * pageSize + idx + 1}
+                        </td>
+                        <td>
+                          {entry.employee_name ?? (
+                            <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Unknown</span>
                           )}
-                        </div>
-                        {reason && (
-                          <div className="entry-reason">{reason}</div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td>
+                          {entry.paycode_code
+                            ? <span className="client-code-cell">{entry.paycode_code}</span>
+                            : '—'}
+                        </td>
+                        <td>{fmt(entry.start_time)}</td>
+                        <td>{fmt(entry.end_time)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(entry.regular_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(entry.overtime_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(entry.double_time_hours).toFixed(2)}</td>
+                        <td>
+                          <div>
+                            <Badge variant={meta.variant}>{meta.label}</Badge>
+                            {entry.match_confidence != null && (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', marginLeft: '0.4rem' }}>
+                                {(entry.match_confidence * 100).toFixed(0)}%
+                              </span>
+                            )}
+                          </div>
+                          {reason && (
+                            <div className="entry-reason">{reason}</div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          <Pagination
-            page={entryPage}
-            totalItems={totalItems}
-            pageSize={pageSize}
-            onPageChange={setEntryPage}
-          />
+            <Pagination
+              page={entryPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setEntryPage}
+            />
           </>
         )}
       </div>

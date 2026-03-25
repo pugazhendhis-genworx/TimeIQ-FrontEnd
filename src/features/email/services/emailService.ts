@@ -14,6 +14,13 @@ export const fetchEmailsApi = async (): Promise<EmailMessage[]> => {
   return data;
 };
 
+export const fetchEmailByIdApi = async (emailId: string): Promise<EmailMessage> => {
+  const { data } = await servicesApi.get<EmailMessage>(
+    `${EMAIL_PREFIX}/get-email/${emailId}`,
+  );
+  return data;
+};
+
 export const fetchTimesheetEmailsApi = async (): Promise<EmailMessage[]> => {
   const { data } = await servicesApi.get<EmailMessage[]>(
     `${EMAIL_PREFIX}/get-emails`,
@@ -39,4 +46,5 @@ export const reprocessFailedEmailsApi = async (): Promise<unknown> => {
   );
   return data;
 };
+
 
