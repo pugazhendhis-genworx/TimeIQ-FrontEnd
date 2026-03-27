@@ -17,8 +17,8 @@ interface AppConfig {
 }
 
 const config: AppConfig = {
-  AUTH_API_BASE_URL: 'http://localhost:8000',
-  SERVICES_API_BASE_URL: 'http://localhost:8001',
+  AUTH_API_BASE_URL: 'https://timeguard-auth-backend-service-717740758627.us-east1.run.app',
+  SERVICES_API_BASE_URL: 'https://timeguard-core-backend-service-717740758627.us-east1.run.app',
   APP_NAME: 'TimeGuard',
 };
 

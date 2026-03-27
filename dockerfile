@@ -1,13 +1,11 @@
 # Stage 1: Build
-FROM node:20-alpine 
+FROM nginx:alpine
 
-WORKDIR /app
+RUN rm -rf /usr/share/nginx/html/*
 
-COPY package*.json ./
-RUN npm install
+COPY dist/ /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY . .
+EXPOSE 8080
 
-EXPOSE 5173
-
-CMD ["npm","run","dev","--","--host"]
+CMD ["nginx", "-g", "daemon off;"]
