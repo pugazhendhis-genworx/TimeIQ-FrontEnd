@@ -2,6 +2,7 @@
  *  Payroll-ready export lines – auditor
  * ────────────────────────────────────────────── */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fmtStored as fmtTs, fmtStoredDate as fmtDate } from '../../utils/formatStoredTime';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchClientsThunk } from '../client/clientSlice';
 import {
@@ -16,8 +17,7 @@ import Modal from '../../components/common/Modal';
 import Badge from '../../components/common/Badge';
 import Pagination from '../../components/common/Pagination';
 
-const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString() : '—';
+/* fmtDate is imported from formatStoredTime */
 
 const statusLabelMap: Record<string, string> = {
   RECEIVED: 'Received',
@@ -29,8 +29,7 @@ const statusLabelMap: Record<string, string> = {
   REJECTED: 'Rejected',
 };
 
-const fmtTs = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—';
+/* fmtTs is imported from formatStoredTime */
 
 const PayrollReadyPage = () => {
   const dispatch = useAppDispatch();
@@ -362,7 +361,7 @@ const PayrollReadyPage = () => {
                 <span className="ts-meta__label">Week ending</span>
                 <span className="ts-meta__value">
                   {enrichedData.week_ending
-                    ? new Date(enrichedData.week_ending).toLocaleDateString()
+                    ? fmtDate(enrichedData.week_ending)
                     : '—'}
                 </span>
               </div>

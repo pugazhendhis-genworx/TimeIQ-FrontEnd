@@ -4,6 +4,7 @@
  *  Supports review, approval, rejection workflow
  * ────────────────────────────────────────────── */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fmtStored, fmtStoredDate } from '../../utils/formatStoredTime';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetsThunk } from './extractedSlice';
 import { fetchEmailByIdThunk } from '../email/emailSlice';
@@ -166,7 +167,7 @@ const ExtractedTimesheetsPage = () => {
                             ) : (
                                 paginated.map((t) => (
                                     <tr key={t.timesheet_id}>
-                                        <td>{new Date(t.received_at).toLocaleString()}</td>
+                                        <td>{fmtStored(t.received_at)}</td>
                                         <td>{t.sender_email}</td>
                                         <td>{t.client_name}</td>
                                         <td>{t.week_ending ?? '—'}</td>
@@ -270,7 +271,7 @@ const ExtractedTimesheetsPage = () => {
                             <div className="detail-row">
                                 <span className="detail-label">Received</span>
                                 <span>
-                                    {new Date(selectedTimesheet.received_at).toLocaleString()}
+                                    {fmtStored(selectedTimesheet.received_at)}
                                 </span>
                             </div>
                             <div className="detail-row">
@@ -299,7 +300,7 @@ const ExtractedTimesheetsPage = () => {
                                         {selectedTimesheet.entries.map((entry: any) => (
                                             <tr key={entry.timeentry_id}>
                                                 <td>{entry.employee_name || '—'}</td>
-                                                <td>{entry.start_time ? new Date(entry.start_time).toLocaleDateString() : '—'}</td>
+                                                <td>{entry.start_time ? fmtStoredDate(entry.start_time) : '—'}</td>
                                                 <td>{entry.regular_hours}</td>
                                                 <td>{entry.overtime_hours}</td>
                                                 <td>{entry.double_time_hours}</td>
@@ -334,7 +335,7 @@ const ExtractedTimesheetsPage = () => {
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Received At</span>
-                            <span>{new Date(singleEmail.received_at).toLocaleString()}</span>
+                            <span>{fmtStored(singleEmail.received_at)}</span>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Subject</span>

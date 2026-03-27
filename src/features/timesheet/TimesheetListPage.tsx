@@ -2,6 +2,7 @@
  *  Timesheet list – Operation Executive
  * ────────────────────────────────────────────── */
 import { useEffect, useMemo, useState } from 'react';
+import { fmtStored as fmt, fmtStoredDate as fmtDate } from '../../utils/formatStoredTime';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import {
@@ -38,11 +39,7 @@ const matchingMeta: Record<string, { label: string; variant: string }> = {
   ASSIGNMENT_VIOLATION: { label: 'Assignment violation', variant: 'assignment_violation' },
 };
 
-const fmt = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—';
-
-const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString() : '—';
+/* fmt and fmtDate are imported from formatStoredTime */
 
 type SortOrder = 'desc' | 'asc';
 
@@ -501,7 +498,7 @@ const TimesheetListPage = () => {
             </div>
             <div className="detail-row">
               <span className="detail-label">Received At</span>
-              <span>{new Date(singleEmail.received_at).toLocaleString()}</span>
+              <span>{fmt(singleEmail.received_at)}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label">Subject</span>

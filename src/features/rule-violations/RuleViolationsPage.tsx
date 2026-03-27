@@ -3,6 +3,7 @@
  *  Flagged timesheets, violation detail, source mail
  * ────────────────────────────────────────────── */
 import { useEffect, useMemo, useState } from 'react';
+import { fmtStored as fmt, fmtStoredDate as fmtDate } from '../../utils/formatStoredTime';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import {
@@ -17,11 +18,7 @@ import config from '../../config/apiConfig';
 import ViolationSeverityList from './components/ViolationSeverityList';
 import Pagination from '../../components/common/Pagination';
 
-const fmt = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—';
-
-const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString() : '—';
+/* fmt and fmtDate are imported from formatStoredTime */
 
 const RuleViolationsPage = () => {
   const dispatch = useAppDispatch();

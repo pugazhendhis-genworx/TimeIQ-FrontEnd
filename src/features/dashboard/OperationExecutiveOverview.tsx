@@ -3,6 +3,7 @@
  *  Stats cards, recent emails, approval pipeline, clients, violations
  * ────────────────────────────────────────────── */
 import { useEffect, useState } from 'react';
+import { fmtStored as fmt, fmtStoredDate } from '../../utils/formatStoredTime';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchTimesheetsThunk } from '../timesheet/timesheetSlice';
@@ -18,8 +19,7 @@ import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import ViolationSeverityList from '../rule-violations/components/ViolationSeverityList';
 
-const fmt = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—';
+/* fmt is imported from formatStoredTime */
 
 const statusLabelMap: Record<string, string> = {
   RECEIVED: 'Received',
@@ -164,7 +164,7 @@ const OperationExecutiveOverview = () => {
               ) : (
                 topFlagged.map((row) => (
                   <tr key={row.timesheet_id}>
-                    <td>{row.week_ending ? new Date(row.week_ending).toLocaleDateString() : '—'}</td>
+                    <td>{fmtStoredDate(row.week_ending)}</td>
                     <td style={{ fontSize: '0.85rem' }}>{row.email}</td>
                     <td><Badge variant="assignment_violation">{row.status}</Badge></td>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>

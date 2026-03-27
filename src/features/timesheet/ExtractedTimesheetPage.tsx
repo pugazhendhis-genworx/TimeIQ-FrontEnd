@@ -3,6 +3,7 @@
  *  Uses /extracted-data/{id} for enriched display
  * ────────────────────────────────────────────── */
 import { useEffect, useMemo, useState } from 'react';
+import { fmtStored as fmt, fmtStoredDate as fmtDate } from '../../utils/formatStoredTime';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchExtractedTimesheetThunk } from './timesheetSlice';
@@ -27,11 +28,7 @@ const matchingMeta: Record<string, { label: string; variant: string }> = {
   ASSIGNMENT_VIOLATION: { label: 'Assignment violation', variant: 'assignment_violation' },
 };
 
-const fmt = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—';
-
-const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString() : '—';
+/* fmt and fmtDate are imported from formatStoredTime */
 
 const ExtractedTimesheetPage = () => {
   const { timesheetId } = useParams<{ timesheetId: string }>();
