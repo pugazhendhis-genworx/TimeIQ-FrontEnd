@@ -17,9 +17,12 @@ interface AppConfig {
 }
 
 const config: AppConfig = {
-  AUTH_API_BASE_URL: 'https://timeguard-auth-backend-service-717740758627.us-east1.run.app',
-  SERVICES_API_BASE_URL: 'https://timeguard-core-backend-service-717740758627.us-east1.run.app',
+  AUTH_API_BASE_URL: import.meta.env.VITE_AUTH_BACKEND_URL,
+  SERVICES_API_BASE_URL: import.meta.env.VITE_CORE_BACKEND_URL,
   APP_NAME: 'TimeGuard',
 };
+
+console.log("Auth URl", config.AUTH_API_BASE_URL)
+console.log("Core url", config.SERVICES_API_BASE_URL)
 
 export default config;

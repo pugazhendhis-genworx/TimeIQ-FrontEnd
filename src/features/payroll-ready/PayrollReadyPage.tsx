@@ -7,10 +7,15 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchClientsThunk } from '../client/clientSlice';
 import {
   fetchAllPayrollReadyApi,
+  fetchPayrollPayslipsByTimesheetApi,
   fetchPayrollSummaryByTimesheetApi,
 } from './services/payrollReadyService';
 import { fetchExtractedTimesheetByIdApi } from '../timesheet/services/timesheetService';
-import type { PayrollReadyEntry, PayrollTimesheetSummary } from './types/payrollReady.types';
+import type {
+  PayrollReadyEntry,
+  PayrollTimesheetPayslips,
+  PayrollTimesheetSummary,
+} from './types/payrollReady.types';
 import type { ExtractedTimesheetDisplay } from '../timesheet/types/timesheet.types';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -48,6 +53,10 @@ const PayrollReadyPage = () => {
   const [enrichedOpen, setEnrichedOpen] = useState(false);
   const [enrichedData, setEnrichedData] = useState<ExtractedTimesheetDisplay | null>(null);
   const [enrichedLoading, setEnrichedLoading] = useState(false);
+
+  const [payslipsOpen, setPayslipsOpen] = useState(false);
+  const [payslipsData, setPayslipsData] = useState<PayrollTimesheetPayslips | null>(null);
+  const [payslipsLoading, setPayslipsLoading] = useState(false);
 
   const closeEnriched = useCallback(() => {
     setEnrichedOpen(false);
@@ -140,6 +149,20 @@ const PayrollReadyPage = () => {
     }
   };
 
+  const openPayslips = async (timesheetId: string) => {
+    setPayslipsOpen(true);
+    setPayslipsData(null);
+    setPayslipsLoading(true);
+    try {
+      const payload = await fetchPayrollPayslipsByTimesheetApi(timesheetId);
+      setPayslipsData(payload);
+    } catch {
+      setPayslipsData(null);
+    } finally {
+      setPayslipsLoading(false);
+    }
+  };
+
   const clientName = (id: string) =>
     clients.find((c) => c.client_id === id)?.client_name ?? id.slice(0, 8);
 
@@ -226,6 +249,13 @@ const PayrollReadyPage = () => {
                         onClick={() => openEnriched(row.timesheet_id)}
                       >
                         Enriched timesheet
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="btn--sm"
+                        onClick={() => openPayslips(row.timesheet_id)}
+                      >
+                        View payslips
                       </Button>
                     </td>
                   </tr>
@@ -329,6 +359,184 @@ const PayrollReadyPage = () => {
           </>
         ) : (
           <div className="no-data">Could not load summary.</div>
+        )}
+      </Modal>
+
+      <Modal
+        open={payslipsOpen}
+        onClose={() => {
+          setPayslipsOpen(false);
+          setPayslipsData(null);
+        }}
+        title="Timesheet payroll slips"
+        size="xxl"
+        actions={
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setPayslipsOpen(false);
+              setPayslipsData(null);
+            }}
+          >
+            Close
+          </Button>
+        }
+      >
+        {payslipsLoading ? (
+          <div className="no-data">Loading payslips…</div>
+        ) : payslipsData ? (
+          <div style={{ maxHeight: 'min(78vh, 720px)', overflow: 'auto' }}>
+            <div className="ts-meta" style={{ marginBottom: '1rem' }}>
+              <div className="ts-meta__item">
+                <span className="ts-meta__label">Timesheet</span>
+                <span className="ts-meta__value" style={{ fontFamily: 'monospace' }}>
+                  {payslipsData.timesheet_id.slice(0, 8)}…
+                </span>
+              </div>
+              <div className="ts-meta__item">
+                <span className="ts-meta__label">Client</span>
+                <span className="ts-meta__value">{payslipsData.client_name ?? '—'}</span>
+              </div>
+              <div className="ts-meta__item">
+                <span className="ts-meta__label">Week ending</span>
+                <span className="ts-meta__value">{fmtDate(payslipsData.week_ending)}</span>
+              </div>
+              <div className="ts-meta__item">
+                <span className="ts-meta__label">Employees</span>
+                <span className="ts-meta__value">{payslipsData.payroll_slips.length}</span>
+              </div>
+            </div>
+
+
+            <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+              <table className="data-table" style={{ fontSize: '0.85rem' }}>
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Reg h</th>
+                    <th>OT h</th>
+                    <th>DT h</th>
+                    <th>Reg rate</th>
+                    <th>OT rate</th>
+                    <th>DT rate</th>
+                    <th>Reg pay</th>
+                    <th>OT pay</th>
+                    <th>Holiday pay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payslipsData.payroll_slips.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="no-data">
+                        No payroll slips for this timesheet.
+                      </td>
+                    </tr>
+                  ) : (
+                    payslipsData.payroll_slips.map((slip) => (
+                      <tr key={`${slip.payroll_entry_id}-inputs`}>
+                        <td>{slip.employee_name ?? (slip.employee_id?.slice(0, 8) ?? '—')}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.regular_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.overtime_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.double_time_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.regular_rate).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.overtime_rate).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.double_time_rate).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.reg_pay).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.ot_pay).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.holiday_pay).toFixed(2)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="insight-card" style={{ marginBottom: '1rem' }}>
+              <strong>Payslip calculations</strong>
+              <p className="text-sm text-muted" style={{ marginTop: '0.35rem' }}>
+                Detailed computed amounts per employee and final pay.
+              </p>
+            </div>
+
+            <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+              <table className="data-table" style={{ fontSize: '0.85rem' }}>
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Reg h</th>
+                    <th>OT h</th>
+                    <th>DT h</th>
+                    <th>Regular</th>
+                    <th>Holiday</th>
+                    <th>Overtime</th>
+                    <th>Double-time</th>
+                    <th>Total pay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payslipsData.payroll_slips.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="no-data">
+                        No payroll slips for this timesheet.
+                      </td>
+                    </tr>
+                  ) : (
+                    payslipsData.payroll_slips.map((slip) => (
+                      <tr key={slip.payroll_entry_id}>
+                        <td>{slip.employee_name ?? (slip.employee_id?.slice(0, 8) ?? '—')}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.regular_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.overtime_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.double_time_hours).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.regular_amount).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.holiday_amount).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.overtime_amount).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>{Number(slip.double_time_amount).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 700 }}>
+                          {Number(slip.total_pay).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {payslipsData.payroll_slips.length > 0 && (
+              <div className="insight-card" style={{ marginBottom: '1rem' }}>
+                <strong>Formula used for each employee</strong>
+                <p className="text-sm text-muted" style={{ marginTop: '0.4rem' }}>
+                  Regular = regular_hours × reg_pay × regular_rate
+                </p>
+                <p className="text-sm text-muted">
+                  Holiday = regular_hours × holiday_pay × regular_rate
+                </p>
+                <p className="text-sm text-muted">
+                  Overtime = overtime_hours × ot_pay × overtime_rate
+                </p>
+                <p className="text-sm text-muted">
+                  Double-time = double_time_hours × reg_pay × double_time_rate
+                </p>
+              </div>
+            )}
+
+            <div className="insight-card">
+              <strong>Timesheet totals</strong>
+              <div className="text-sm text-muted" style={{ marginTop: '0.5rem' }}>
+                Regular hours: {Number(payslipsData.total_regular_hours).toFixed(2)}
+              </div>
+              <div className="text-sm text-muted">
+                Overtime hours: {Number(payslipsData.total_overtime_hours).toFixed(2)}
+              </div>
+              <div className="text-sm text-muted">
+                Double-time hours: {Number(payslipsData.total_double_time_hours).toFixed(2)}
+              </div>
+              <div style={{ marginTop: '0.5rem', fontWeight: 700 }}>
+                Total pay: {Number(payslipsData.total_pay).toFixed(2)}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="no-data">Could not load timesheet payslips.</div>
         )}
       </Modal>
 

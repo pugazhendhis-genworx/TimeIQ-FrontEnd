@@ -1,5 +1,9 @@
 import { servicesApi } from '../../../lib/axios';
-import type { PayrollReadyEntry, PayrollTimesheetSummary } from '../types/payrollReady.types';
+import type {
+  PayrollReadyEntry,
+  PayrollTimesheetPayslips,
+  PayrollTimesheetSummary,
+} from '../types/payrollReady.types';
 
 const PREFIX = '/payroll_ready';
 
@@ -24,4 +28,13 @@ export const fetchPayrollEntryByIdApi = async (
     `${PREFIX}/${payrollEntryId}`,
   );
   return data.data;
+};
+
+export const fetchPayrollPayslipsByTimesheetApi = async (
+  timesheetId: string,
+): Promise<PayrollTimesheetPayslips> => {
+  const { data } = await servicesApi.get<PayrollTimesheetPayslips>(
+    `${PREFIX}/timesheet/${timesheetId}/payslips`,
+  );
+  return data;
 };
